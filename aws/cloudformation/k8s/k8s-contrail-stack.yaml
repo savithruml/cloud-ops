@@ -306,30 +306,12 @@ Resources:
 Outputs:
   ContrailDashboard:
     Description: Contrail Web-UI
-    Value: !Join [ ":", [ "https://", "Fn::GetAtt": [ EC2InstanceMaster, PublicDnsName ], "8143"] ]
+    Value: !Join [ ":", [ "Fn::GetAtt": [ EC2InstanceMaster, PublicDnsName ], "8080"] ]
 
   KubernetesDashboard:
     Description: Kubernetes Web-UI
-    Value: !Join [ ":", [ "http://", "Fn::GetAtt": [ EC2InstanceMaster, PublicDnsName ], "9090"] ]
+    Value: !Join [ ":", [ "Fn::GetAtt": [ EC2InstanceMinion, PublicDnsName ], "9090"] ]
 
-  Username:
+  Username/Password:
     Description: Contrail Web-UI username
-    Value: admin
-
-  Password:
-    Description: Contrail Web-UI password
-    Value: contrail123
-
-  MasterFQDN:
-    Description: Public DNS of the master instance
-    Value:
-      Fn::GetAtt:
-      - EC2InstanceMaster
-      - PublicDnsName
-      
-  MinionFQDN:
-    Description: Public DNS of the minion instance
-    Value:
-      Fn::GetAtt:
-      - EC2InstanceMinion
-      - PublicDnsName
+    Value: admin/contrail123
