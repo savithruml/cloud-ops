@@ -1,0 +1,40 @@
+---
+- name: Delete azure resources for OpenShift-Contrail stack
+  hosts: localhost
+  connection: local
+  tasks:
+
+  - name: Delete "{{ master_instance_name }}" instance
+    azure_rm_virtualmachine:
+      name: "{{ master_instance_name }}"
+      resource_group: "{{ resource_group_name }}"
+      state: absent
+
+  - name: Delete "{{ master_instance_name }}" vNIC
+    azure_rm_networkinterface:
+      name: masterNIC
+      resource_group: "{{ resource_group_name }}"
+      state: absent
+
+  - name: Delete "{{ master_instance_name }}" public IP address
+    azure_rm_publicipaddress:
+      name: masterPublicIP
+      resource_group: "{{ resource_group_name }}"
+      state: absent
+
+  - name: Delete virtual network
+    azure_rm_virtualnetwork:
+      name: "{{ virtual_network_name }}"
+      resource_group: "{{ resource_group_name }}"
+      state: absent
+
+  - name: Delete storage account
+    azure_rm_storageaccount:
+      name: "{{ storage_account_name }}"
+      resource_group: "{{ resource_group_name }}"
+      state: absent
+
+  - name: Delete resource group
+    azure_rm_resourcegroup:
+      name: "{{ resource_group_name }}"
+      state: absent 

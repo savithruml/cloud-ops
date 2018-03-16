@@ -1,0 +1,22 @@
+# EXAMPLES INIT
+# aws_access_key: <key-here> 
+# aws_secret_key: <secret-key-here>
+# key_name: openshift-enterprise
+# aws_region: us-east-2
+# vpc_id: vpc-494dc320
+# vpc_subnet_id: subnet-16f3546d
+# ami_id: ami-10547475
+# instance_type: t2.large
+# count: 2
+# ec2_tag: contrail-kubernetes
+
+aws_access_key: <key-here> 
+aws_secret_key: <secret-key-here>
+key_name: <key>
+aws_region: <region>
+vpc_id: <vpc>
+vpc_subnet_id: <subnet>
+ami_id: <image>
+instance_type: <flavor>
+count: 2
+ec2_tag: contrail-k8s

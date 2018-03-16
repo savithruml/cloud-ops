@@ -1,0 +1,15 @@
+resource_group_name: "mykollaLab"
+azure_region: "westus"
+storage_account_name: "mykollastorage"
+storage_account_sku: "Standard_LRS"
+
+virtual_network_name: "openshift-contrail-vn"
+virtual_network_prefix: "10.0.0.0/16"
+virtual_network_subnet_prefix: "10.0.1.0/24"
+network_security_group_name: "openshift-contrail-sg"
+
+master_instance_name: "openshift-master"
+flavor: "Standard_DS1_v2"
+admin_username: "contrail"
+admin_password: "C0ntrail12345"
+master_count: 3

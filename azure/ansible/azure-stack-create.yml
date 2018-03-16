@@ -1,0 +1,70 @@
+---
+- name: Create azure resources for OpenShift-Contrail stack
+  hosts: localhost
+  connection: local
+  tasks:
+
+  - name: Create resource group
+    azure_rm_resourcegroup:
+      name: "{{ resource_group_name }}"
+      location: "{{ azure_region }}"
+
+  - name: Create storage account
+    command: /usr/bin/az storage account create --name "{{ storage_account_name }}" --resource-group "{{ resource_group_name }}" --kind Storage --location "{{ azure_region }}" --sku "{{ storage_account_sku }}"
+
+  - name: Create a virtual network
+    azure_rm_virtualnetwork:
+      name: "{{ virtual_network_name }}"
+      address_prefixes: "{{ virtual_network_prefix }}"
+      resource_group: "{{ resource_group_name }}"
+
+  - name: Add subnet to virtual network
+    azure_rm_subnet:
+      name: subnet-1
+      address_prefix: "{{ virtual_network_subnet_prefix }}"
+      virtual_network: "{{ virtual_network_name }}"
+      resource_group: "{{ resource_group_name }}"
+
+  - name: Create a network security group
+    azure_rm_securitygroup:
+      name: "{{ network_security_group_name }}"
+      resource_group: "{{ resource_group_name }}"
+    ignore_errors: yes
+
+  - name: Create a rule that allows all traffic
+    command: /usr/bin/az network nsg rule create --resource-group "{{ resource_group_name }}" --nsg-name "{{ network_security_group_name }}" --name allow-all --access Allow --protocol "*" --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+  - name: Create public IP address's for OpenShift instances
+    azure_rm_publicipaddress:
+      name: "masterPublicIP-{{ item }}"
+      allocation_method: Static
+      resource_group: "{{ resource_group_name }}"
+    with_items: "{{ groups['masters'] }}"
+
+  - name: Create a vNIC's for OpenShift master instances
+    azure_rm_networkinterface:
+      name: "masterNIC-{{ item }}"
+      virtual_network: "{{ virtual_network_name }}"
+      subnet: subnet-1
+      public_ip_name: "masterPublicIP-{{ item }}"     
+      resource_group: "{{ resource_group_name }}"
+    with_items: "{{ groups['masters'] }}"
+
+  - name: Create OpenShift master instances
+    azure_rm_virtualmachine:
+      name: "{{ master_instance_name }}-{{ item }}"
+      vm_size: "{{ flavor }}"
+      admin_username: "{{ admin_username }}"
+      admin_password: "{{ admin_password }}"
+      ssh_password_enabled: true
+      network_interfaces: "masterNIC-{{ item }}"
+      storage_account: "{{ storage_account_name }}" 
+      storage_container: master
+      storage_blob: master.vhd
+      image:
+        offer: CentOS
+        publisher: OpenLogic
+        sku: '7.3'
+        version: latest
+      resource_group: "{{ resource_group_name }}"
+    with_items: "{{ groups['masters'] }}"
