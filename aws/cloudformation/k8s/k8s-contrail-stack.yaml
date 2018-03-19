@@ -3,10 +3,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Stack to deploy Kubernetes with Contrail SDN'
 
 Parameters:
-  KeyName:
-    Description: EC2 KeyPair to enable SSH access to the instance
-    Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: must be the name of an existing EC2 KeyPair
+#  KeyName:
+#    Description: EC2 KeyPair to enable SSH access to the instance
+#    Type: AWS::EC2::KeyPair::KeyName
+#    ConstraintDescription: must be the name of an existing EC2 KeyPair
 
   InstanceType:
     Description: EC2 instance type (Default = t2.xlarge)
@@ -135,7 +135,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-vpc
+          Value: !Sub openshift-vpc-${AWS::StackName}
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -143,7 +143,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-gw
+          Value: !Sub openshift-gw-${AWS::StackName}
 
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -161,7 +161,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-subnet-A
+          Value: !Sub openshift-subnet-A-${AWS::StackName}
 
   RouteTable:
     Type: AWS::EC2::RouteTable
@@ -170,7 +170,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-rt-internet
+          Value: !Sub openshift-rt-internet-${AWS::StackName}
 
   InternetRoute:
     Type: AWS::EC2::Route
@@ -201,7 +201,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-sec-grp
+          Value: !Sub openshift-sec-grp-${AWS::StackName}
 
   NetworkInterfaceMaster:
     Type: AWS::EC2::NetworkInterface
@@ -214,13 +214,13 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-master-int-eth0
+          Value: !Sub openshift-master-int-eth0-${AWS::StackName}
 
   EC2InstanceMaster:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
+#      KeyName: !Ref KeyName
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
           !Ref 'InstanceType', Arch]]
       BlockDeviceMappings:
@@ -254,10 +254,12 @@ Resources:
 
           [nodes]
           ${MinionIPv4Address}
+          EOF
+          ansible-playbook -i /root/ansible-labs/k8s/hosts /root/ansible-labs/k8s/site.yml
       Tags:
         -
           Key: Name
-          Value: master
+          Value: !Sub master-${AWS::StackName}
           
   NetworkInterfaceMinion:
     Type: AWS::EC2::NetworkInterface
@@ -270,13 +272,13 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: openshift-minion-int-eth0
+          Value: !Sub openshift-minion-int-eth0-${AWS::StackName}
 
   EC2InstanceMinion:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
+#      KeyName: !Ref KeyName
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
           !Ref 'InstanceType', Arch]]
       BlockDeviceMappings:
@@ -301,7 +303,7 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: minion
+          Value: !Sub minion-${AWS::StackName}
 
 Outputs:
   ContrailDashboard:
@@ -312,6 +314,6 @@ Outputs:
     Description: Kubernetes Web-UI
     Value: !Join [ ":", [ "Fn::GetAtt": [ EC2InstanceMinion, PublicDnsName ], "9090"] ]
 
-  Username/Password:
+  UsernamePassword:
     Description: Contrail Web-UI username
     Value: admin/contrail123
