@@ -327,7 +327,7 @@ Outputs:
 
   KubernetesDashboard:
     Description: Kubernetes Web-UI
-    Value: !Sub "http://${EC2InstanceMaster.PublicDnsName}:9090"
+    Value: !Sub "http://${EC2InstanceMinion.PublicDnsName}:9090"
 
   UsernamePassword:
     Description: Contrail Web-UI username
