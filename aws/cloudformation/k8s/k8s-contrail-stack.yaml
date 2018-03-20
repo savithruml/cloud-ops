@@ -1,6 +1,8 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Stack to deploy Kubernetes with Contrail SDN'
+Description: >
+  Stack to deploy Kubernetes with OpenContrail SDN
+  CONTACT: Savithru Lokanath <savithru@icloud.com>
 
 Parameters:
   InstanceType:
