@@ -332,3 +332,7 @@ Outputs:
   UsernamePassword:
     Description: Contrail Web-UI username
     Value: admin/contrail123
+
+  Examples:
+    Description: Examples to try
+    Value: "https://github.com/savithruml/openshift-contrail/tree/master/openshift/examples"
