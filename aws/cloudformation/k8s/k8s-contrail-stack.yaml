@@ -329,6 +329,10 @@ Outputs:
     Description: Kubernetes Web-UI
     Value: !Sub "http://${EC2InstanceMinion.PublicDnsName}:9090"
 
+  ShellURL:
+    Description: Access shell using this URL (Works with Chrome browser only. Secure shell plugin required)
+    Value: !Sub "ssh root@${EC2InstanceMaster.PublicDnsName}"
+
   UsernamePassword:
     Description: Contrail Web-UI username
     Value: admin/contrail123
