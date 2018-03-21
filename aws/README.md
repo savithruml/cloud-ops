@@ -16,9 +16,7 @@
 
 * Kubernetes with OpenContrail SDN
 
-    Launch Instances (Automated)
-
-    * Bring your ansible node. This node can either sit indide the AWS environment or outside
+    1) Bring your ansible node. This node can either sit indide the AWS environment or outside
     
             (ansible-node)# apt-get update -y && apt-get install python python-pip -y
             (ansible-node)# pip install -U ansible boto boto3
@@ -26,7 +24,7 @@
             (ansible-node)# cd /root
             (ansible-node)# git clone https://github.com/savithruml/ansible-labs
             
-    * Populate /root/ansible-labs/aws/playbooks/group_vars/all file with AWS creds & cluster info
+    2) Populate /root/ansible-labs/aws/playbooks/group_vars/all file with AWS creds & cluster info
       
             (ansible-node)# cat /root/ansible-labs/aws/playbooks/group_vars/all
             
@@ -44,23 +42,23 @@
             (ansible-node)# cd /root/ansible-labs/aws       
             (ansible-node)# ansible-playbook -i inventory/hosts playbooks/deploy-vms.yml
             
-    * This should bring up 2 instances in AWS with root password set to "c0ntrail123"
+        This should bring up 2 instances in AWS with root password set to "c0ntrail123"
     
-    * Prepare nodes for deployment
+    4) Prepare nodes for deployment
 
-    * Run these commands on all nodes. This will enable root access with password
+    5) Run these commands on all nodes. This will enable root access with password
     
             (all-nodes)# sudo su
             (all-nodes)# sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
             (all-nodes)# service sshd restart
     
-    * Logout & login as root user
+    6) Logout & login as root user
     
             (ansible-node)# ssh-keygen –t rsa
             (ansible-node)# ssh-copy-id root@<k8s-master>
             (ansible-node)# ssh-copy-id root@<k8s-node>
              
-    * Populate /root/ansible-labs/k8s/hosts with k8s-master & k8s-node info
+    7) Populate /root/ansible-labs/k8s/hosts with k8s-master & k8s-node info
     
             (ansible-node)# cat /root/ansible-labs/k8s/hosts
        
@@ -70,7 +68,7 @@
                [nodes]
                10.10.10.2
         
-    * Run the play
+    8) Run the play
  
             (ansible-node)# cd /root/ansible-labs/k8s
             (ansible-node)# ansible-playbook -i hosts site.yml
