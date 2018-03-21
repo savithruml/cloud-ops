@@ -1,6 +1,6 @@
-# Kubernetes + OpenContrail SDN
+# Google Kubernetes + OpenContrail SDN
 
-Quickly bringup a Google Kubernetes cluster with OpenContrail SDN on different clouds (AWS/Azure/GCP/OpenStack)
+Quickly bringup a Kubernetes cluster with OpenContrail SDN on different clouds (AWS/Azure/GCP/OpenStack)
 
 ## AWS CloudFormation
 
