@@ -1,4 +1,4 @@
-# AWS
+# Kubernetes + OpenContrail SDN on AWS cloud
 
 Quickly bringup a Google Kubernetes cluster with OpenContrail SDN on AWS
 
@@ -37,7 +37,7 @@ HashiCorp [Terraform](https://www.terraform.io/) enables you to safely and predi
   
           (host)# terraform apply
       
-## Ansible playbook
+## Red Hat Ansible
 
 Red Hat® [Ansible](https://www.ansible.com/) makes it easy to scale automation, manage complex deployments and speed productivity. Extend the power of Ansible with workflows to streamline jobs and simple tools to share solutions with your team.
 
