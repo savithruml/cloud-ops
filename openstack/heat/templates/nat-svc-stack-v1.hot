@@ -1,0 +1,304 @@
+heat_template_version: 2013-05-23
+
+description: Heat template to create a NAT v1 service chain
+
+parameters:
+  mgmt_network_name:
+    type: string
+    description: Name of the management network
+
+  mgmt_network_prefix:
+    type: string
+    description: Prefix of Management network
+
+  mgmt_network_prefix_len:
+    type: string
+    description: Prefix length of management network
+  
+  left_network_name:
+    type: string
+    description: Name of the left network
+
+  right_network_name:
+    type: string
+    description: Name of the right network
+
+  left_network_prefix:
+    type: string
+    description: Prefix of left network
+
+  right_network_prefix:
+    type: string
+    description: Prefix of right network
+
+  left_network_prefix_len:
+    type: string
+    description: Prefix length of left network
+
+  right_network_prefix_len:
+    type: string
+    description: Prefix length of right network
+  
+  service_template_name:
+    type: string
+    description: Name of the service template
+
+  service_mode:
+    type: string
+    description: Mode of the service
+
+  service_type:
+    type: string
+    description: Type of the service
+
+  service_image:
+    type: string
+    description: Type of the service image
+
+  service_flavor:
+    type: string
+    description: Flavor for service VM instance
+
+  service_interface_type_list:
+    type: string
+    description: List of interface types
+
+  service_shared_ip_list:
+    type: string
+    description: List of shared IP
+
+  service_static_routes_list:
+    type: string
+    description: List of static routes
+
+  service_instance_name:
+    type: string
+    description: Name of the service instance
+
+  service_scaling:
+    type: string
+    description: Scaling option for service instance
+
+  service_availability_zone:
+    type: string
+    description: Zone of the service instance
+
+  service_max_instances:
+    type: number
+    description: Number of instances in the service zone
+
+  service_ordered_interfaces:
+    type: string
+    description: Indicates if service interfaces are ordered
+ 
+  service_policy_name:
+    type: string
+    description: Name of the service policy
+
+  service_policy_direction:
+    type: string
+    description: Direction of the service policy
+ 
+  service_policy_protocol_allowed:
+    type: string
+    description: Protocol allowed by the policy
+
+  start_src_ports:
+    type: number
+    description: Start of src port
+
+  end_src_ports:
+    type: number
+    description: End of src port
+
+  start_dst_ports:
+    type: number
+    description: Start of dst port
+
+  end_dst_ports:
+    type: number
+    description: End of dst port
+
+  server_left_name:
+    type: string
+    description: Left VM instance
+
+  server_right_name:
+    type: string
+    description: Right VM instance
+    
+  server_image:
+    type: string
+    description: Virtual Machine image
+
+  server_flavor:
+    type: string
+    description: Virtual Machine Flavor
+
+resources:
+  template_NetworkIpam_1:
+    type: OS::Contrail::NetworkIpam
+    properties:
+      name: { get_param: mgmt_network_name }
+ 
+  template_NetworkIpam_2:
+    type: OS::Contrail::NetworkIpam
+    properties:
+      name: { get_param: left_network_name }
+
+  template_NetworkIpam_3:
+    type: OS::Contrail::NetworkIpam
+    properties:
+      name: { get_param: right_network_name }
+
+  template_VirtualNetwork_Mgmt:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam_1 ]
+    properties:
+      name: { get_param: mgmt_network_name }
+      network_ipam_refs: [{ get_resource: template_NetworkIpam_1 }]
+      network_ipam_refs_data:
+        [{
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: mgmt_network_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: mgmt_network_prefix_len },
+                },
+            }] 
+         }]
+
+  template_VirtualNetwork_1:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam_2 ]
+    properties:
+      name: { get_param: left_network_name }
+      network_ipam_refs: [{ get_resource: template_NetworkIpam_2 }]
+      network_ipam_refs_data:
+        [{
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: left_network_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: left_network_prefix_len },
+                },
+            }]
+         }]
+
+  template_VirtualNetwork_2:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam_3 ]
+    properties:
+      name: { get_param: right_network_name }
+      network_ipam_refs: [{ get_resource: template_NetworkIpam_3 }]
+      network_ipam_refs_data:
+        [{
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: right_network_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: right_network_prefix_len },
+                },
+            }]
+         }]
+
+  nat_service_template:
+    type: OS::Contrail::ServiceTemplate
+    properties:
+      name: { get_param : service_template_name }
+      service_mode: { get_param : service_mode }
+      service_type: { get_param : service_type }
+      image_name: { get_param : service_image }
+      flavor: { get_param : service_flavor }
+      ordered_interfaces: { get_param: service_ordered_interfaces }
+      service_scaling: { get_param: service_scaling }
+      service_interface_type_list: { "Fn::Split" : [ ",", Ref: service_interface_type_list ] }
+      shared_ip_list: { "Fn::Split" : [ ",", Ref: service_shared_ip_list ] }
+      static_routes_list: { "Fn::Split" : [ ",", Ref: service_static_routes_list ] }
+
+  service_instance:
+    type: OS::Contrail::ServiceInstance
+    depends_on: [ nat_service_template, template_VirtualNetwork_Mgmt, template_VirtualNetwork_1, template_VirtualNetwork_2 ]
+    properties:
+      name: { get_param: service_instance_name }
+      service_template: { get_resource: nat_service_template }
+      scale_out:
+        max_instances: { get_param: service_max_instances }
+      interface_list: [
+        {
+   	  virtual_network: { get_resource: template_VirtualNetwork_Mgmt }
+        },
+        {
+          virtual_network: { get_resource: template_VirtualNetwork_1 }
+        },
+        {
+          virtual_network: { get_resource: template_VirtualNetwork_2 }
+        },
+      ]    
+
+  service_policy:
+    type: OS::Contrail::NetworkPolicy
+    depends_on: [ template_VirtualNetwork_1, template_VirtualNetwork_2, service_instance ]
+    properties:
+      name: { get_param: service_policy_name }
+      entries:
+        policy_rule: [
+              {
+                "direction": { get_param: service_policy_direction },
+                "protocol": { get_param: service_policy_protocol_allowed },
+                "src_addresses": [{ "virtual_network": { get_resource: template_VirtualNetwork_1 }}],
+                "dst_addresses": [{ "virtual_network": { get_resource: template_VirtualNetwork_2 }}],
+                "src_ports": [{"start_port": {get_param: start_src_ports}, "end_port": {get_param: end_src_ports}}],
+                "dst_ports": [{"start_port": {get_param: start_dst_ports}, "end_port": {get_param: end_dst_ports}}],
+		"action_list": {"apply_service": [{ get_resource: service_instance}]},
+              },
+       ]
+
+  service_policy_attach_VN1:
+    type: OS::Contrail::AttachPolicy
+    depends_on: [ template_VirtualNetwork_1, service_policy ]
+    properties:
+      network: { get_resource: template_VirtualNetwork_1 }
+      policy: { get_attr: [ service_policy, fq_name ] }
+  
+  service_policy_attach_VN2:
+    type: OS::Contrail::AttachPolicy
+    depends_on: [ template_VirtualNetwork_2, service_policy ]
+    properties:
+      network: { get_resource: template_VirtualNetwork_2 }
+      policy: { get_attr: [ service_policy, fq_name ] }
+
+  server_left:
+    type: OS::Nova::Server
+    depends_on: [ template_VirtualNetwork_1 ]
+    properties:
+      name: { get_param: server_left_name }
+      image: { get_param: server_image }
+      flavor: { get_param: server_flavor }
+      networks: 
+        - network: { get_resource: template_VirtualNetwork_1 }
+                        
+  server_right:
+    type: OS::Nova::Server
+    depends_on: [ template_VirtualNetwork_2 ]
+    properties:
+      name: { get_param: server_right_name }
+      image: { get_param: server_image }
+      flavor: { get_param: server_flavor }
+      networks:
+        - network: { get_resource: template_VirtualNetwork_2 }
+
+
+outputs:
+  service_instance_fq_name:
+    description: FQ name of the service template
+    value: { get_attr: [ service_instance, fq_name ] }
+  service_instance_vms:
+    description: List of service VMs
+    value: { get_attr: [ service_instance, virtual_machines ] }
+  num_active_service_instance_vms:
+    description: Number of active service VMs
+    value: { get_attr: [ service_instance, active_service_vms ] }

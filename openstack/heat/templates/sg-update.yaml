@@ -1,0 +1,367 @@
+heat_template_version: 2015-04-30
+
+description: HOT to update a security-group on the fly
+
+parameters:
+
+  image:
+    type: string
+    description: Name of the image
+
+  flavor:
+    type: string
+    description: Flavor type
+
+  network_id:
+    type: string
+    description: Network name or UUID
+
+  subnet_id:
+    type: string
+    description: Subnet name or UUID
+
+  security_group:
+    type: string
+    description: Name of the security group
+    
+resources:
+  
+  template_port_1:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_1:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_1 }
+
+  template_port_2:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_2:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-2
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_2 }
+
+  template_port_3:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_3:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-3
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_3 }
+
+  template_port_4:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_4:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-4
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_4 }
+
+  template_port_5:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_5:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-5
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_5 }
+
+  template_port_6:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_6:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-6
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_6 }
+
+  template_port_7:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_7:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-7
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_7 }
+
+  template_port_8:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_8:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-8
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_8 }
+
+  template_port_9:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_9:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-9
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_9 }
+
+  template_port_10:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_10:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-10
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_10 }
+
+  template_port_11:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_11:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-11
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_11 }
+
+  template_port_12:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_12:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-12
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_12 }
+
+  template_port_13:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_13:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-13
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_13 }
+
+  template_port_14:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_14:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-14
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_14 }
+
+  template_port_15:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_15:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-15
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_15 }
+
+  template_port_16:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_16:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-16
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_16 }
+
+  template_port_17:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_17:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-17
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_17 }
+
+  template_port_18:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_18:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-18
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_18 }
+
+  template_port_19:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_19:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-19
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_19 }
+
+  template_port_20:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: network_id }
+      fixed_ips:
+        - subnet_id: { get_param: subnet_id }
+      security_groups: [{ get_param: security_group }]
+
+  template_server_20:
+    type: OS::Nova::Server
+    properties:
+      name: test-server-20
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: template_port_20 }

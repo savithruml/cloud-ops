@@ -1,0 +1,84 @@
+heat_template_version: 2015-04-30
+
+description: Heat template to create a Public Network with SNAT
+
+parameters:
+  public_network_name:
+    type: string
+    description: Name of right network to be created
+
+  public_network_subnet_prefix:
+    type: string
+    description: Prefix of the Public Network
+
+  public_network_subnet_prefix_len:
+    type: string
+    description: Prefix length of the Public Network
+
+  public_network_subnet_default_gw:
+    type: string
+    description: Default Gateway of the Public Network
+
+  public_network_is_shared:
+    type: boolean
+    description: Is the Public network shared or not
+ 
+  public_network_external_ipam:
+    type: boolean
+    description: Is the Public Network external to Contrail IPAM
+  
+  route_target:
+    type: string
+    description: Route Target
+
+  server_name:
+    type: string
+    description: Name of the Virtual-Machine
+
+  image:
+    type: string
+    description: Image name
+
+  flavor:
+    type: string
+    description: Flavor name
+ 
+resources:
+  template_NetworkIpam_1:
+    type: OS::ContrailV2::NetworkIpam
+    properties:
+      name: { get_param: public_network_name }
+
+  template_VirtualNetwork_1:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam_1 ]
+    properties:
+      name: { get_param: public_network_name }
+      network_ipam_refs: [{ get_resource: template_NetworkIpam_1 }]
+      network_ipam_refs_data:
+        [{
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: public_network_subnet_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: public_network_subnet_prefix_len },
+                },
+              network_ipam_refs_data_ipam_subnets_default_gateway: { get_param: public_network_subnet_default_gw },
+            }]
+         }]
+      route_target_list:
+        {
+          route_target_list_route_target: [{ get_param: route_target }],
+        }
+      is_shared: { get_param: public_network_is_shared }
+      router_external: { get_param: public_network_external_ipam }
+
+  server_1:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: server_name }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - network: { get_resource: template_VirtualNetwork_1 }

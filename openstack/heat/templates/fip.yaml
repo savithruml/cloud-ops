@@ -1,0 +1,26 @@
+heat_template_version: 2015-04-30
+
+description: >
+  HOT template to create a FloatingIpPool
+
+parameters:
+  name:
+    type: string
+
+  fq_name:
+    type: string
+
+  display_name:
+    type: string
+
+  virtual_network:
+    type: string
+
+resources:
+  template_FloatingIpPool:
+    type: OS::ContrailV2::FloatingIpPool
+    properties:
+      name: { get_param: name }
+      fq_name: { get_param: fq_name }
+      display_name: { get_param: display_name }
+      virtual_network: { get_param: virtual_network }

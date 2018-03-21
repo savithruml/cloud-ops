@@ -1,0 +1,139 @@
+heat_template_version: 2015-10-15
+
+description: >
+  HOT to demonstrate Port-Mirroring
+
+parameters:
+  network_name:
+    type: string
+    description: Name of the network
+
+  subnet_prefix:
+    type: string
+    description: Prefix of the network subnet
+
+  subnet_prefix_len:
+    type: string
+    description: Prefix length of the network subnet
+
+  server_traffic_gen_name:
+    type: string
+    description: Name of the VM generating traffic   
+
+  server_traffic_analyzer_name:
+    type: string
+    description: Name of the analyzer VM
+
+  server_traffic_analyzer_udp_port:
+    type: number
+    constraints:
+      - range: { min: 1030, max: 65000 }
+    description: UDP port to which mirrored traffic is sent
+
+  mirror_traffic_direction:
+    type: string
+    constraints:
+      - allowed_values:
+        - ingress
+        - egress
+        - both
+    description: Direction of traffic to be mirrored
+
+  image_name:
+    type: string
+    description: Name of the image
+
+  flavor_type:
+    type: string
+    description: Flavor type of server
+
+resources:
+  template_NetworkIpam:
+    type: OS::ContrailV2::NetworkIpam
+    properties:
+      name: { get_param: network_name }
+
+  template_VirtualNetwork:
+    type: OS::ContrailV2::VirtualNetwork
+    depends_on: [ template_NetworkIpam ]
+    properties:
+      name: { get_param: network_name }
+      network_ipam_refs: [{ get_resource: template_NetworkIpam }]
+      network_ipam_refs_data:
+        [{
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: subnet_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: subnet_prefix_len },
+                },
+            }]
+         }]
+
+  template_TrafficGen_VirtualMachineInterface:
+    type: OS::ContrailV2::VirtualMachineInterface
+    depends_on: [ template_VirtualNetwork, template_TrafficAnalyzer_InstanceIp ]
+    properties:
+      name: { get_param: server_traffic_gen_name }
+      virtual_network_refs: [{ get_resource: template_VirtualNetwork }]
+      virtual_machine_interface_properties:
+        {
+          virtual_machine_interface_properties_interface_mirror:
+            {
+              virtual_machine_interface_properties_interface_mirror_traffic_direction: { get_param: mirror_traffic_direction },
+              virtual_machine_interface_properties_interface_mirror_mirror_to:
+                {
+                  virtual_machine_interface_properties_interface_mirror_mirror_to_analyzer_name: { get_param: server_traffic_analyzer_name },
+                  virtual_machine_interface_properties_interface_mirror_mirror_to_analyzer_ip_address: { get_attr: [ template_TrafficAnalyzer_InstanceIp, instance_ip_address ] },
+                  virtual_machine_interface_properties_interface_mirror_mirror_to_routing_instance: { list_join: [':', [{ list_join: [':', get_attr: [ template_VirtualNetwork, fq_name ]] }], [{ get_attr: [ template_VirtualNetwork, display_name ] }] ]},
+                  virtual_machine_interface_properties_interface_mirror_mirror_to_udp_port: { get_param: server_traffic_analyzer_udp_port },
+                },
+            },
+        }
+      
+  template_TrafficGen_InstanceIp:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ template_TrafficGen_VirtualMachineInterface ]
+    properties:
+      virtual_machine_interface_refs: [{ get_resource: template_TrafficGen_VirtualMachineInterface }]
+      virtual_network_refs: [{ list_join: [':', { get_attr: [ template_VirtualNetwork, fq_name ] } ] }]
+
+  template_TrafficAnalyzer_VirtualMachineInterface:
+    type: OS::ContrailV2::VirtualMachineInterface
+    depends_on: [ template_VirtualNetwork ]
+    properties:
+      name: { get_param: server_traffic_analyzer_name }
+      virtual_network_refs: [{ get_resource: template_VirtualNetwork }]
+
+  template_TrafficAnalyzer_InstanceIp:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ template_TrafficAnalyzer_VirtualMachineInterface ]
+    properties:
+      virtual_machine_interface_refs: [{ get_resource: template_TrafficAnalyzer_VirtualMachineInterface }]
+      virtual_network_refs: [{ list_join: [':', { get_attr: [ template_VirtualNetwork, fq_name ] } ] }]
+
+  template_TrafficGen_Server:
+    type: OS::Nova::Server
+    depends_on: [ template_TrafficGen_InstanceIp ]
+    properties:
+      name: { get_param: server_traffic_gen_name }
+      image: { get_param:  image_name }
+      flavor: { get_param: flavor_type }
+      networks:
+        - port: { get_resource: template_TrafficGen_VirtualMachineInterface }
+
+  template_TrafficAnalyzer_Server:
+    type: OS::Nova::Server
+    depends_on: [ template_TrafficAnalyzer_InstanceIp ]
+    properties:
+      name: { get_param: server_traffic_analyzer_name }
+      image: { get_param:  image_name }
+      flavor: { get_param: flavor_type }
+      networks:
+        - port: { get_resource: template_TrafficAnalyzer_VirtualMachineInterface }
+
+outputs:
+  routing_instance:
+    value: { list_join: [':', [{ list_join: [':', get_attr: [ template_VirtualNetwork, fq_name ]] }], [{ get_attr: [ template_VirtualNetwork, display_name ] }] ]}
+

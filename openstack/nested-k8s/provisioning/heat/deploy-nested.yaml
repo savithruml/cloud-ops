@@ -1,0 +1,240 @@
+# NESTED OPENSTACK/KUBERNETES
+
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT JUNIPER.NET
+# Copyright (c) 2017 Juniper Networks, Inc. All rights reserved
+
+heat_template_version: 2015-10-15
+
+description: >
+  HOT to deploy nested-openstack-kubernetes stack with Contrail networking
+
+parameters:
+  public_network_fqdn:
+    type: string
+    description: FQDN of the public network
+
+  master_instance_name:
+    type: string
+    description: Name of the master instance
+    default: nested-master
+
+  master_ip:
+    type: string
+    description: IP address of the master instance
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  slave_instance_name:
+    type: string
+    description: Name of the slave instance
+    default: nested-slave
+
+  slave_ip:
+    type: string
+    description: IP address of the slave instance
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  root_password:
+    type: string
+    description: Root password for the master/slave instances
+    default: contrail123
+
+  image_name:
+    type: string
+    description: Name of the image
+    default: centos-nested-image
+    constraints:
+      - custom_constraint: glance.image
+
+  flavor_type:
+    type: string
+    description: Flavor type of the instance
+    default: m1.xlarge
+    constraints:
+      - custom_constraint: nova.flavor
+
+  docker_registry:
+    type: string
+    description: Docker registry which stores Contrail containers
+    default: 10.84.5.71
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  external_dns_server:
+    type: string
+    description: External DNS server
+    default: 10.84.5.100
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  container_os:
+    type: string
+    description: Container OS
+    default: ubuntu14.04
+    constraints:
+      - allowed_values:
+        - ubuntu14.04
+        - ubuntu16.04
+        - centos7.1
+        - centos7.2
+        description: Value must be one of 'ubuntu14.04', 'ubuntu16.04', 'centos7.1', 'centos7.2'
+
+  container_orchestrator:
+    type: string
+    description: Container Orchestration Engine
+    default: kubernetes
+    constraints:
+      - allowed_values:
+        - kubernetes
+        - openshift
+        - mesos
+        description: Value must be one of 'kubernetes', 'openshift', 'mesos'
+
+  contrail_version:
+    type: string
+    description: Contrail version
+    default: 4.0.0.0-20
+
+  contrail_node_hostname:
+    type: string
+    description: Hostname of the Contrail node
+
+  contrail_cfgm_ip:
+    type: string
+    description: IP address of the Contrail controller/config node
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  contrail_analytics_ip:
+    type: string
+    description: IP address of the Contrail analytics node
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  openstack_keystone_ip:
+    type: string
+    description: IP address of the OpenStack keystone node
+    constraints:
+      - allowed_pattern: "[.0-9]*"
+
+  openstack_admin_password:
+    type: string
+    description: OpenStack keystone admin password
+
+  openstack_domain:
+    type: string
+    description: OpenStack domain name
+    default: default-domain
+
+  openstack_project:
+    type: string
+    description: OpenStack project name
+    default: admin
+    constraints:
+      - custom_constraint: keystone.project
+
+resources:
+  template_VirtualMachineInterface_Master:
+    type: OS::ContrailV2::VirtualMachineInterface
+    properties:
+      name: { get_param: master_instance_name } 
+      virtual_network_refs: [{ get_param: public_network_fqdn }]
+
+  template_VirtualMachineInterface_Slave:
+    type: OS::ContrailV2::VirtualMachineInterface
+    properties:
+      name: { get_param: slave_instance_name } 
+      virtual_network_refs: [{ get_param: public_network_fqdn }]
+
+  template_InstanceIp_Master:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ template_VirtualMachineInterface_Master ]
+    properties:
+      instance_ip_address: { get_param: master_ip }
+      virtual_machine_interface_refs: [{ get_resource: template_VirtualMachineInterface_Master }]
+      virtual_network_refs: [{ get_param: public_network_fqdn }]
+
+  template_InstanceIp_Slave:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ template_VirtualMachineInterface_Slave ]
+    properties:
+      instance_ip_address: { get_param: slave_ip }
+      virtual_machine_interface_refs: [{ get_resource: template_VirtualMachineInterface_Slave }]
+      virtual_network_refs: [{ get_param: public_network_fqdn }]
+
+  template_Instance_Master:
+    type: OS::Nova::Server
+    depends_on: [ template_InstanceIp_Master ]
+    properties:
+      name: { get_param: master_instance_name }
+      image: { get_param: image_name }
+      flavor: { get_param: flavor_type }
+      networks:
+        - port: { get_resource: template_VirtualMachineInterface_Master }
+      user_data:
+        get_resource: template_MasterInit
+      user_data_format: RAW
+
+  template_Instance_Slave:
+    type: OS::Nova::Server
+    depends_on: [ template_InstanceIp_Slave ]
+    properties:
+      name: { get_param: slave_instance_name }
+      image: { get_param: image_name }
+      flavor: { get_param: flavor_type }
+      networks:
+        - port: { get_resource: template_VirtualMachineInterface_Slave }
+      user_data:
+        get_resource: template_SlaveInit
+      user_data_format: RAW
+
+  template_MasterInit:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config:
+        str_replace:
+          template: { get_file: ../cloud-init/k8s/master.sh }
+          params:
+            $master_ip: { get_param: master_ip }
+            $slave_ip: { get_param: slave_ip }
+            $master_hostname: { get_param: master_instance_name }
+            $slave_hostname: { get_param: slave_instance_name }
+            $root_password: { get_param: root_password }
+            $docker_registry: { get_param: docker_registry }
+            $external_dns_server: { get_param: external_dns_server }
+            $container_os: { get_param: container_os }
+            $container_orchestrator: { get_param: container_orchestrator }
+            $contrail_version: { get_param: contrail_version }
+            $contrail_node_hostname: { get_param: contrail_node_hostname }
+            $contrail_cfgm_ip: { get_param: contrail_cfgm_ip }
+            $contrail_analytics_ip: { get_param: contrail_analytics_ip }
+            $openstack_keystone_ip: { get_param: openstack_keystone_ip }
+            $openstack_admin_password: { get_param: openstack_admin_password }
+            $openstack_domain: { get_param: openstack_domain }
+            $openstack_project: { get_param: openstack_project }
+            $openstack_public_network: { str_split: [':', { get_param: public_network_fqdn }, 2] }
+
+  template_SlaveInit:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config:
+        str_replace:
+          template: { get_file: ../cloud-init/k8s/slave.sh }
+          params:
+            $master_ip: { get_param: master_ip }
+            $slave_ip: { get_param: slave_ip }
+            $master_hostname: { get_param: master_instance_name }
+            $slave_hostname: { get_param: slave_instance_name }
+            $root_password: { get_param: root_password }
+            $external_dns_server: { get_param: external_dns_server }
+            
+outputs:
+  master_instance_ip:
+    description: Public IP of master instance
+    value: { get_attr: [ template_Instance_Master, networks, { str_split: [':', { get_param: public_network_fqdn }, 2] }, 0 ] }
+
+  slave_instance_ip:
+    description: Public IP of slave instance
+    value: { get_attr: [ template_Instance_Slave, networks, { str_split: [':', { get_param: public_network_fqdn }, 2] }, 0 ] }

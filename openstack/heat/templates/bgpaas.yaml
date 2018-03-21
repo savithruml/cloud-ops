@@ -1,0 +1,31 @@
+heat_template_version: 2015-04-30
+
+description: >
+  HOT to create a BgpAsAService
+
+parameters:
+  name:
+    type: string
+  autonomous_system:
+    type: number
+  count:
+    type: number
+
+resources:
+  template_bgpaas_group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: count }
+      resource_def:
+        type: OS::ContrailV2::BgpAsAService
+        properties:
+          name: 
+            list_join: ['-',[ { get_param: name}, '%index%' ]]
+          autonomous_system: { get_param: autonomous_system }
+          bgpaas_session_attributes:
+            {
+              bgpaas_session_attributes_address_families:
+                {
+                  bgpaas_session_attributes_address_families_family: ['inet','inet6'],
+                },
+            }

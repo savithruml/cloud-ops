@@ -1,0 +1,102 @@
+heat_template_version: 2015-04-30
+
+description: HOT to add a BGP router
+
+parameters:
+  hostname:
+    type: string
+    description: BGP router name
+
+  router_type:
+    type: string
+    description: Router type
+
+  admin_state:
+    type: boolean
+    description: Admin state
+
+  vendor:
+    type: string
+    description: Vendor type
+
+  address:
+    type: string
+    description: IP address
+
+  identifier:
+    type: string
+    description: Identifier
+
+  autonomous_system:
+    type: number
+    description: ASN
+
+  port_number:
+    type: number
+    description: BGP port number
+
+  hold_time:
+    type: number
+    description: Hold time value in seconds
+
+  routing_instance:
+    type: string
+    description: routing_instance for the BgpRouter
+
+  peer_fqdn:
+    type: string
+    description: Physical router UUID or FQDN
+
+  peer_admin_state:
+    type: boolean
+    description: Physical router admin state
+
+  peer_passive_state:
+    type: boolean
+    description: Passive interface
+
+  peer_hold_time:
+    type: number
+    description: Hold time value
+
+  peer_loop_count:
+    type: string
+    description: Loop count
+
+resources:
+  template_BGPRouter:
+    type: OS::ContrailV2::BgpRouter
+    properties:
+      name: { get_param: hostname }
+      bgp_router_parameters:
+        {
+          bgp_router_parameters_router_type: { get_param: router_type },
+          bgp_router_parameters_admin_down: { get_param: admin_state },
+          bgp_router_parameters_vendor: { get_param: vendor },
+          bgp_router_parameters_address: { get_param: address },
+          bgp_router_parameters_identifier: { get_param: identifier },
+          bgp_router_parameters_autonomous_system: { get_param: autonomous_system },
+          bgp_router_parameters_port: { get_param: port_number },
+          bgp_router_parameters_hold_time: { get_param: hold_time },
+          bgp_router_parameters_address_families:
+            {
+              bgp_router_parameters_address_families_family: [inet-vpn, inet6-vpn, route-target, e-vpn],
+            },
+        }
+      bgp_router_refs: [{ get_param: peer_fqdn }]
+      bgp_router_refs_data:
+        [{
+          bgp_router_refs_data_session:
+            [{
+             bgp_router_refs_data_session_attributes:
+                [{
+                  
+                  bgp_router_refs_data_session_attributes_admin_down: { get_param: peer_admin_state },
+                  bgp_router_refs_data_session_attributes_passive: { get_param: peer_passive_state },
+                  bgp_router_refs_data_session_attributes_hold_time: { get_param: peer_hold_time },
+                  bgp_router_refs_data_session_attributes_loop_count: { get_param: peer_loop_count },
+                }]
+            }],
+        }]
+      routing_instance: { get_param: routing_instance }
+

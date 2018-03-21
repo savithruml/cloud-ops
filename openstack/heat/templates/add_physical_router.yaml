@@ -1,0 +1,62 @@
+heat_template_version: 2015-04-30
+
+description: HOT to add a physical router
+
+parameters:
+  router_name:
+    type: string
+    description: Name of the physical router
+
+  mgmt_ip:
+    type: string
+    description: Management IP of the physical router
+
+  vendor_name:
+    type: string
+    description: Vendor name
+
+  model_name:
+    type: string
+    description: Product model name
+
+  auto_config_enable:
+    type: boolean
+    description: Enable/Disable auto configuration
+
+  username:
+    type: string
+    description: NetConf username
+
+  password:
+    type: string
+    description: NetConf password
+
+  bgp_router:
+    type: string
+    description: Reference to the BGP peer
+
+  virtual_network:
+    type: string
+    description: Reference to the VN to be extended to the physical router
+
+  global_system_config:
+    type: string
+    description: Global system config for the physical router
+
+resources:
+  template_PhysicalRouter:
+    type: OS::ContrailV2::PhysicalRouter
+    properties:
+      name: { get_param: router_name }
+      physical_router_management_ip: { get_param: mgmt_ip }
+      physical_router_vendor_name: { get_param: vendor_name }
+      physical_router_product_name: { get_param: model_name }
+      physical_router_vnc_managed: { get_param: auto_config_enable }
+      physical_router_user_credentials:
+        {
+          physical_router_user_credentials_username: { get_param: username },
+          physical_router_user_credentials_password: { get_param: password },
+        }
+      bgp_router_refs: [{ get_param: bgp_router }]
+      virtual_network_refs: [{ get_param: virtual_network }]
+      global_system_config: { get_param: global_system_config }  

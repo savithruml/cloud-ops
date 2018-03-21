@@ -1,0 +1,103 @@
+heat_template_version: 2015-04-30
+
+description: Autoscaling Contrail HOT
+
+parameters:
+  image:
+    type: string
+  flavor:
+    type: string
+  virtual_network_1:
+    type: string
+  virtual_network_1_fqdn:
+    type: string
+  virtual_network_2:
+    type: string
+  virtual_network_2_fqdn:
+    type: string
+  virtual_network_3:
+    type: string
+  virtual_network_3_fqdn:
+    type: string
+  service_instance_name:
+    type: string
+  service_interface_type_1:
+    type: string
+  service_interface_type_2:
+    type: string
+  service_interface_type_3:
+    type: string
+  port_tuple_name:
+    type: string
+
+resources:
+  port_tuple_trans:
+    type: OS::ContrailV2::PortTuple
+    properties:
+      name: { get_param: port_tuple_name }
+      service_instance: { get_param:  service_instance_name }
+
+  mgmt_vmi_trans:
+    type: OS::ContrailV2::VirtualMachineInterface
+    depends_on: [ port_tuple_trans ]
+    properties:
+      virtual_machine_interface_properties:
+        {
+         virtual_machine_interface_properties_service_interface_type: { get_param: service_interface_type_1 },
+        }
+      port_tuple_refs: [{ get_resource: port_tuple_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_1_fqdn }]
+
+  left_vmi_trans:
+    type: OS::ContrailV2::VirtualMachineInterface
+    depends_on: [ port_tuple_trans ]
+    properties:
+      virtual_machine_interface_properties:
+        {
+         virtual_machine_interface_properties_service_interface_type: { get_param: service_interface_type_2 },
+        }
+      port_tuple_refs: [{ get_resource: port_tuple_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_2_fqdn }]      
+
+  right_vmi_trans:
+    type: OS::ContrailV2::VirtualMachineInterface
+    depends_on: [ port_tuple_trans ]
+    properties:
+      virtual_machine_interface_properties:
+        {
+         virtual_machine_interface_properties_service_interface_type: { get_param: service_interface_type_3 },
+        }
+      port_tuple_refs: [{ get_resource: port_tuple_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_3_fqdn }]
+
+  mgmt_trans_ip:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ mgmt_vmi_trans ]
+    properties:
+      virtual_machine_interface_refs: [{ get_resource: mgmt_vmi_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_1_fqdn }]
+
+  left_trans_ip:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ left_vmi_trans ]
+    properties:
+      virtual_machine_interface_refs: [{ get_resource: left_vmi_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_2_fqdn }]
+
+  right_trans_ip:
+    type: OS::ContrailV2::InstanceIp
+    depends_on: [ right_vmi_trans ]
+    properties:
+      virtual_machine_interface_refs: [{ get_resource: right_vmi_trans }]
+      virtual_network_refs: [{ get_param: virtual_network_3_fqdn }]
+
+  service_instance_vm:
+    type: OS::Nova::Server
+    depends_on: [ mgmt_trans_ip, left_trans_ip, right_trans_ip ]
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: mgmt_vmi_trans }
+        - port: { get_resource: left_vmi_trans }
+        - port: { get_resource: right_vmi_trans }

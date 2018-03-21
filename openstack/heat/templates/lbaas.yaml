@@ -1,0 +1,198 @@
+## This template deploys one load-balancer (named my_lb) with two listeners
+## my_listener_1 listener uses TERMINATED_HTTPS and listens on port 443
+## my_listener_2 listener uses HTTP and listens on port 80
+## my_pool_1 is attached to my_listener_1, and has server_1 and server_2 as members
+## my_pool_2 is attached to my_listener_2, and has server_3 and server_4 as members
+## Please change the subnet, glance-image and barbican-container-href as per your deployment scenario
+
+heat_template_version: 2016-04-08
+description: Simple template to deploy LBaaS v2
+parameters:
+
+resources:
+
+  lbaas_network_1:
+    type: OS::ContrailV2::VirtualNetwork
+    properties:
+      name: lbaas_network_1
+  
+  lbaas_subnet_1:
+    type: OS::Neutron::Subnet
+    properties:
+      name: lbaas_subnet_1
+      cidr: 192.168.101.0/24
+      network_id: { get_resource: lbaas_network_1 }
+
+  vip_port_0:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: lbaas_network_1 }
+
+  server_1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: lbaas_network_1 }
+      
+  server_2_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: lbaas_network_1 }
+
+  server_3_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: lbaas_network_1 }
+      
+  server_4_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: lbaas_network_1 }
+
+  server_1:
+    type: OS::Nova::Server
+    properties:
+      image: "ubuntu"
+      flavor: "m1.tiny"
+      networks:
+        - port: { get_resource: server_1_port }
+
+  server_2:
+    type: OS::Nova::Server
+    properties:
+      image: "ubuntu"
+      flavor: "m1.tiny"
+      networks:
+        - port: { get_resource: server_2_port }
+
+  server_3:
+    type: OS::Nova::Server
+    properties:
+      image: "ubuntu"
+      flavor: "m1.tiny"
+      networks:
+        - port: { get_resource: server_3_port }
+
+  server_4:
+    type: OS::Nova::Server
+    properties:
+      image: "ubuntu"
+      flavor: "m1.tiny"
+      networks:
+        - port: { get_resource: server_4_port }
+
+
+  my_lb:
+    type: OS::ContrailV2::Loadbalancer
+    properties:
+      name: my_lb
+      loadbalancer_properties:
+        {
+          loadbalancer_properties_vip_subnet_id: { get_resource: lbaas_subnet_1 },
+          loadbalancer_properties_vip_address: { get_attr: [vip_port_0, fixed_ips, 0, ip_address] },
+          loadbalancer_properties_provisioning_status: ACTIVE,
+          loadbalancer_properties_admin_state: TRUE,
+          loadbalancer_properties_operating_status: ONLINE,
+        }
+      virtual_machine_interface_refs: [{ get_resource: vip_port_0 }]
+
+  my_listener_1:
+    type: OS::ContrailV2::LoadbalancerListener
+    properties:
+      name: my_listener_1
+      loadbalancer_listener_properties:
+        {
+          loadbalancer_listener_properties_protocol: HTTP,
+          loadbalancer_listener_properties_protocol_port: 80,
+          #loadbalancer_listener_properties_default_tls_container: "http://10.84.18.2:9311/v1/containers/69f3be9c-2cad-4aa0-8b57-e6296d91e712", #This is the container-ref of the barbican container
+        }
+      loadbalancer_refs: [{ get_resource: my_lb }]
+
+  my_listener_2:
+    type: OS::ContrailV2::LoadbalancerListener
+    properties:
+      name: my_listener_2
+      loadbalancer_listener_properties:
+        {
+          loadbalancer_listener_properties_protocol: HTTP,
+          loadbalancer_listener_properties_protocol_port: 81,
+        }
+      loadbalancer_refs: [{ get_resource: my_lb }]
+
+  my_pool_1:
+    type: OS::ContrailV2::LoadbalancerPool
+    properties:
+      name: my_pool_1
+      loadbalancer_pool_provider: opencontrail
+      loadbalancer_pool_properties:
+        {
+          loadbalancer_pool_properties_protocol: HTTP,
+          loadbalancer_pool_properties_loadbalancer_method: ROUND_ROBIN,
+          loadbalancer_pool_properties_admin_state: TRUE,
+        }
+      loadbalancer_listener_refs: [{ get_resource: my_listener_1 }]
+
+  my_pool_2:
+    type: OS::ContrailV2::LoadbalancerPool
+    properties:
+      name: my_pool_2
+      loadbalancer_pool_provider: opencontrail
+      loadbalancer_pool_properties:
+        {
+          loadbalancer_pool_properties_protocol: HTTP,
+          loadbalancer_pool_properties_loadbalancer_method: ROUND_ROBIN,
+          loadbalancer_pool_properties_admin_state: TRUE,
+        }
+      loadbalancer_listener_refs: [{ get_resource: my_listener_2 }]
+
+
+  pool_member_1:
+    type: OS::ContrailV2::LoadbalancerMember
+    properties:
+      name: member_1
+      loadbalancer_member_properties:
+        {
+          loadbalancer_member_properties_protocol_port: 80,
+          loadbalancer_member_properties_address: {get_attr: [server_1, networks, lbaas_network_1, 0]},
+          loadbalancer_member_properties_admin_state: TRUE,
+          loadbalancer_member_properties_weight: 1,
+        }
+      loadbalancer_pool: { get_resource: my_pool_1 }  
+
+  pool_member_2:
+    type: OS::ContrailV2::LoadbalancerMember
+    properties:
+      name: member_2
+      loadbalancer_member_properties:
+        {
+          loadbalancer_member_properties_protocol_port: 80,
+          loadbalancer_member_properties_address: {get_attr: [server_2, networks, lbaas_network_1, 0]},
+          loadbalancer_member_properties_admin_state: TRUE,
+          loadbalancer_member_properties_weight: 1,
+        }
+      loadbalancer_pool: { get_resource: my_pool_1 }  
+
+  pool_member_3:
+    type: OS::ContrailV2::LoadbalancerMember
+    properties:
+      name: member_3
+      loadbalancer_member_properties:
+        {
+          loadbalancer_member_properties_protocol_port: 8080,
+          loadbalancer_member_properties_address: {get_attr: [server_3, networks, lbaas_network_1, 0]},
+          loadbalancer_member_properties_admin_state: TRUE,
+          loadbalancer_member_properties_weight: 1,
+        }
+      loadbalancer_pool: { get_resource: my_pool_2 }  
+
+  pool_member_4:
+    type: OS::ContrailV2::LoadbalancerMember
+    properties:
+      name: member_4
+      loadbalancer_member_properties:
+        {
+          loadbalancer_member_properties_protocol_port: 8080,
+          loadbalancer_member_properties_address: {get_attr: [server_4, networks, lbaas_network_1, 0]},
+          loadbalancer_member_properties_admin_state: TRUE,
+          loadbalancer_member_properties_weight: 1,
+        }
+      loadbalancer_pool: { get_resource: my_pool_2 }

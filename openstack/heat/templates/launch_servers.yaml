@@ -1,0 +1,38 @@
+heat_template_version: 2014-10-16 
+
+description: Server Anti-Affinity template. Launches each instance on a different compute node.
+
+parameters:
+
+  server_name:
+    type: string
+  server_flavor: 
+    type: string 
+  image: 
+    type: string 
+  network_name:
+    type: string
+  number_of_servers:
+    type: number
+
+resources:
+
+  server-cluster:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: number_of_servers }
+      resource_def: 
+        type: OS::Nova::Server
+        properties:
+          name: 
+            list_join: ['-',[ { get_param: server_name}, '%index%' ]]
+          flavor: { get_param: server_flavor }
+          image: { get_param: image }
+          networks:
+            - network: { get_param: network_name }
+
+outputs:
+
+  instance_uuid:
+    description: UUID of deployed instances
+    value: { get_attr: [server-cluster, refs] }

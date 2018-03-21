@@ -1,0 +1,24 @@
+{
+    "cluster": [
+        {
+            "id": "csg",
+            "parameters": {
+                "provision": {
+                    "contrail_4": {
+                        "controller_config": {
+                            "bgp_asn": "64512",
+                            "external_routers_list": {}
+                        },
+                        "kernel_upgrade": false
+                    },
+                    "openstack": {
+                        "keystone": {
+                            "admin_password": "c0ntrail123"
+                        },
+                        "openstack_manage_amqp": true
+                    }
+                }
+            }
+        }
+    ]
+}

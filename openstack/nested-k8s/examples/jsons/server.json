@@ -1,0 +1,139 @@
+{
+    "server": [
+        {
+            "cluster_id": "csg",
+            "domain": "contrail.juniper.net",
+            "id": "a4s19",
+            "network": {
+                "interfaces": [
+                    {
+                        "default_gateway": "10.84.18.254",
+                        "ip_address": "10.84.18.14/24",
+                        "mac_address": "00:25:90:aa:a9:5e",
+                        "name": "p4p1"
+                    }
+                ],
+                "management_interface": "p4p1",
+                "provisioning": "kickstart"
+            },
+            "parameters": {
+                "provision": {
+                    "contrail": {
+                        "kernel_upgrade": false
+                    },
+                    "contrail_4": {
+                        "enable_lbaas": true,
+                        "kernel_upgrade": false,
+                        "vgw": {}
+                    }
+                }
+            },
+            "password": "c0ntrail123",
+            "roles": [
+                "contrail-compute"
+            ]
+        },
+        {
+            "cluster_id": "csg",
+            "domain": "contrail.juniper.net",
+            "id": "a4s16",
+            "network": {
+                "interfaces": [
+                    {
+                        "default_gateway": "10.84.18.254",
+                        "ip_address": "10.84.18.11/24",
+                        "mac_address": "00:25:90:aa:31:2a",
+                        "name": "p4p1"
+                    }
+                ],
+                "management_interface": "p4p1",
+                "provisioning": "kickstart"
+            },
+            "parameters": {
+                "provision": {
+                    "contrail": {
+                        "kernel_upgrade": false
+                    },
+                    "contrail_4": {
+                        "enable_lbaas": true,
+                        "kernel_upgrade": false,
+                        "vgw": {}
+                    }
+                }
+            },
+            "password": "c0ntrail123",
+            "roles": [
+                "contrail-analytics",
+                "contrail-controller",
+                "openstack",
+                "contrail-analyticsdb"
+            ]
+        },
+        {
+            "cluster_id": "csg",
+            "domain": "contrail.juniper.net",
+            "id": "a4s18",
+            "network": {
+                "interfaces": [
+                    {
+                        "default_gateway": "10.84.18.254",
+                        "ip_address": "10.84.18.13/24",
+                        "mac_address": "00:25:90:ad:ca:5c",
+                        "name": "p4p1"
+                    }
+                ],
+                "management_interface": "p4p1",
+                "provisioning": "kickstart"
+            },
+            "parameters": {
+                "provision": {
+                    "contrail": {
+                        "kernel_upgrade": false
+                    },
+                    "contrail_4": {
+                        "enable_lbaas": true,
+                        "kernel_upgrade": false,
+                        "vgw": {}
+                    }
+                }
+            },
+            "password": "c0ntrail123",
+            "roles": [
+                "contrail-compute"
+            ]
+        },
+        {
+            "cluster_id": "csg",
+            "domain": "contrail.juniper.net",
+            "id": "a4s17",
+            "network": {
+                "interfaces": [
+                    {
+                        "default_gateway": "10.84.18.254",
+                        "ip_address": "10.84.18.12/24",
+                        "mac_address": "00:25:90:aa:a8:ba",
+                        "name": "p4p1"
+                    }
+                ],
+                "management_interface": "p4p1",
+                "provisioning": "kickstart"
+            },
+            "parameters": {
+                "provision": {
+                    "contrail": {
+                        "kernel_upgrade": false
+                    },
+                    "contrail_4": {
+                        "enable_lbaas": true,
+                        "kernel_upgrade": false,
+                        "vgw": {}
+                    }
+                }
+            },
+            "password": "c0ntrail123",
+            "roles": [
+                "contrail-compute"
+            ]
+        }
+    ]
+}
