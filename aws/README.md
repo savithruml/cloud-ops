@@ -20,9 +20,21 @@ HashiCorp [Terraform](https://www.terraform.io/) enables you to safely and predi
 
 * Kubernetes with OpenContrail SDN
 
+  [Download](https://www.terraform.io/downloads.html) Terraform
+  
+      (host)# ssh-keygen -b 2048 -t rsa -f .ssh/terraform
       (host)# git clone https://github.com/savithruml/cloud-ops
       (host)# cd cloud-ops/aws/terraform/k8s
+      (host)# vi terraform.tfvars
       
+      ...
+             # AWS access key
+             aws_access_key            = "<access-key>"
+
+             # AWS secret key
+             aws_secret_key            = "<secret-key>"
+      ...
+  
       (host)# terraform apply
       
 ## Ansible playbook
