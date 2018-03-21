@@ -1,4 +1,4 @@
-# AWS
+# Kubernetes + OpenContrail SDN on AWS cloud
 
 Quickly bringup a Google Kubernetes cluster with OpenContrail SDN on AWS
 
@@ -20,12 +20,24 @@ HashiCorp [Terraform](https://www.terraform.io/) enables you to safely and predi
 
 * Kubernetes with OpenContrail SDN
 
-      (host)# git clone https://github.com/savithruml/cloud-ops
-      (host)# cd cloud-ops/aws/terraform/k8s
+  [Download](https://www.terraform.io/downloads.html) Terraform
+  
+          (host)# ssh-keygen -b 2048 -t rsa -f .ssh/terraform
+          (host)# git clone https://github.com/savithruml/cloud-ops
+          (host)# cd cloud-ops/aws/terraform/k8s
+          (host)# vi terraform.tfvars
       
-      (host)# terraform apply
+               ...
+                    # AWS access key
+                    aws_access_key            = "<access-key>"
+
+                    # AWS secret key
+                    aws_secret_key            = "<secret-key>"
+               ...
+  
+          (host)# terraform apply
       
-## Ansible playbook
+## Red Hat Ansible
 
 Red Hat® [Ansible](https://www.ansible.com/) makes it easy to scale automation, manage complex deployments and speed productivity. Extend the power of Ansible with workflows to streamline jobs and simple tools to share solutions with your team.
 
