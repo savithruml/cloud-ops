@@ -22,20 +22,20 @@ HashiCorp [Terraform](https://www.terraform.io/) enables you to safely and predi
 
   [Download](https://www.terraform.io/downloads.html) Terraform
   
-      (host)# ssh-keygen -b 2048 -t rsa -f .ssh/terraform
-      (host)# git clone https://github.com/savithruml/cloud-ops
-      (host)# cd cloud-ops/aws/terraform/k8s
-      (host)# vi terraform.tfvars
+          (host)# ssh-keygen -b 2048 -t rsa -f .ssh/terraform
+          (host)# git clone https://github.com/savithruml/cloud-ops
+          (host)# cd cloud-ops/aws/terraform/k8s
+          (host)# vi terraform.tfvars
       
-      ...
-             # AWS access key
-             aws_access_key            = "<access-key>"
+               ...
+                    # AWS access key
+                    aws_access_key            = "<access-key>"
 
-             # AWS secret key
-             aws_secret_key            = "<secret-key>"
-      ...
+                    # AWS secret key
+                    aws_secret_key            = "<secret-key>"
+               ...
   
-      (host)# terraform apply
+          (host)# terraform apply
       
 ## Ansible playbook
 
