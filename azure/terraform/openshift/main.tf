@@ -30,6 +30,21 @@ variable "azure_instance_flavor_type" {
     default = "Standard_DS12_v2"
 }
 
+variable "os_image_map" {
+    type        = "map"
+
+    default = {
+        centos_publisher = "Openlogic"
+        centos_offer     = "CentOS"
+        centos_sku       = "7.3"
+        centos_version   = "latest"
+        rhel_publisher   = "RedHat"
+        rhel_offer       = "RHEL"
+        rhel_sku         = "7.3"
+        rhel_version     = "latest"
+    }
+}
+
 variable "azure_instance_username" {
     default = "default"
 }
