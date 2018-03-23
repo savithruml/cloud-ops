@@ -31,11 +31,19 @@ variable "azure_instance_flavor_type" {
 }
 
 variable "azure_instance_username" {
-    default = "contrail"
+    default = "default"
 }
 
 variable "azure_instance_password" {
-    default = "C0ntrail12345"
+    default = "default"
+}
+
+variable azure_rhel_subscription_username {
+    default = "default"
+}
+
+variable azure_rhel_subscription_password {
+    default = "default"
 }
 
 # Create a resource group if it doesn’t exist

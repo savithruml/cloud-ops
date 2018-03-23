@@ -9,7 +9,7 @@ azure_region                                      = "eastus"
 azure_resource_group_name                         = "ContrailResourceGroup"
 
 # Azure tags for resources
-azure_tags                                        = "contrail db"
+azure_tags                                        = "contrail demo"
 
 # Azure Virtual Network address range
 azure_virtual_network_cidr                        = "10.0.0.0/16"
@@ -27,4 +27,7 @@ azure_instance_flavor_type                        = "Standard_DS12_v2"
 azure_instance_username                           = "contrail"
 
 # Azure Virtual Machine desired password
-azure_instance_password                           = "C0ntrail12345"
+azure_instance_password                           = "hello-world"
+
+azure_rhel_subscription_username                  = "hello-world"
+azure_rhel_subscription_password                  = "hello-world"
