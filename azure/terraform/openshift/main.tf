@@ -96,10 +96,6 @@ resource "azurerm_subnet" "contrail-fabric-subnet" {
     resource_group_name  = "${azurerm_resource_group.ContrailResourceGroup.name}"
     virtual_network_name = "${azurerm_virtual_network.contrail-network.name}"
     address_prefix       = "${var.azure_virtual_network_cidr_subnet_contrail}"
-    
-    tags {
-        environment = "${var.azure_tags}"
-    }
 }
 
 resource "azurerm_subnet" "azure-fabric-subnet" {
@@ -107,10 +103,6 @@ resource "azurerm_subnet" "azure-fabric-subnet" {
     resource_group_name  = "${azurerm_resource_group.ContrailResourceGroup.name}"
     virtual_network_name = "${azurerm_virtual_network.contrail-network.name}"
     address_prefix       = "${var.azure_virtual_network_cidr_subnet_azure}"
-    
-    tags {
-        environment = "${var.azure_tags}"
-    }
 }
 
 # Create Network Security Group and rule
@@ -149,6 +141,18 @@ resource "azurerm_public_ip" "contrail-master-public-ip" {
     }
 }
 
+# Create a Data source for Master public IP
+data "azurerm_public_ip" "contrail-master-public-ip" { 
+    name                         = "${azurerm_public_ip.contrail-master-public-ip.name}"
+    resource_group_name          = "${azurerm_resource_group.ContrailResourceGroup.name}" 
+}
+
+# Create a Data source for Master domain name
+data "azurerm_public_ip" "contrail-master-domain-name" { 
+    name                         = "${azurerm_public_ip.contrail-master-public-ip.domain_name_label}"
+    resource_group_name          = "${azurerm_resource_group.ContrailResourceGroup.name}" 
+}
+
 # Create Minion public IP
 resource "azurerm_public_ip" "contrail-minion-public-ip" {
     name                         = "minionPublicIP"
@@ -160,6 +164,18 @@ resource "azurerm_public_ip" "contrail-minion-public-ip" {
     tags {
         environment = "${var.azure_tags}"
     }
+}
+
+# Create a Data source for Minion public IP
+data "azurerm_public_ip" "contrail-minion-public-ip" { 
+    name                         = "${azurerm_public_ip.contrail-minion-public-ip.name}"
+    resource_group_name          = "${azurerm_resource_group.ContrailResourceGroup.name}" 
+}
+
+# Create a Data source for Minion domain name
+data "azurerm_public_ip" "contrail-minion-domain-name" { 
+    name                         = "${azurerm_public_ip.contrail-minion-public-ip.domain_name_label}"
+    resource_group_name          = "${azurerm_resource_group.ContrailResourceGroup.name}" 
 }
 
 # Create Master network interface
