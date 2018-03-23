@@ -24,7 +24,7 @@ azure_virtual_network_subnet_azure_cidr           = "10.0.2.0/24"
 azure_instance_flavor_type                        = "Standard_DS12_v2"
 
 # Azure Virtual Machine desired username
-azure_instance_username                    = "contrail"
+azure_instance_username                           = "contrail"
 
 # Azure Virtual Machine desired password
-azure_instance_password                    = "Embe1mpls_007"
+azure_instance_password                           = "C0ntrail12345"
