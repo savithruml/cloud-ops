@@ -245,7 +245,7 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
     provisioner "remote-exec" {
         inline = [
             "chmod +x /tmp/master.sh",
-            "sudo /tmp/master.sh "${var.azure_instance_password}" "${var.azure_rhel_subscription_username}" "${var.azure_rhel_subscription_password}"
+            "sudo /tmp/master.sh ${var.azure_instance_password} ${var.azure_rhel_subscription_username} ${var.azure_rhel_subscription_password}"
         ]
     }
 
@@ -299,7 +299,7 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
     provisioner "remote-exec" {
         inline = [
             "chmod +x /tmp/minion.sh",
-            "sudo /tmp/minion.sh "${var.azure_instance_password}" "${var.azure_rhel_subscription_username}" "${var.azure_rhel_subscription_password}"
+            "sudo /tmp/minion.sh ${var.azure_instance_password} ${var.azure_rhel_subscription_username} ${var.azure_rhel_subscription_password}"
         ]
     }
 
