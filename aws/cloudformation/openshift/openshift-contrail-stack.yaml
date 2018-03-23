@@ -1,4 +1,8 @@
 ---
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Stack to deploy OpenShift with Contrail SDN'
 

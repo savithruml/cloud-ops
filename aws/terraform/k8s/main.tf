@@ -1,3 +1,7 @@
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
 # Define the variables
 variable "public_key_path" {}
 variable "private_key_path" {}
