@@ -30,6 +30,10 @@ variable "azure_instance_flavor_type" {
     default = "Standard_DS12_v2"
 }
 
+variable "os_image" {
+    default     = "centos"
+}
+
 variable "os_image_map" {
     type        = "map"
 
