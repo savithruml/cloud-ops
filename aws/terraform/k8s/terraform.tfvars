@@ -1,3 +1,7 @@
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
 # Vars for bringing up K8s with OpenContrail SDN
 
 # Path to the SSH public key to be used for authentication
