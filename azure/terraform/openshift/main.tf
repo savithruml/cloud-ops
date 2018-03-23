@@ -30,11 +30,11 @@ variable "azure_instance_flavor_type" {
     default = "Standard_DS12_v2"
 }
 
-variable "os_image" {
+variable "azure_os_image" {
     default     = "centos"
 }
 
-variable "os_image_map" {
+variable "azure_os_image_map" {
     type        = "map"
 
     default = {
@@ -227,10 +227,10 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
     }
 
     storage_image_reference {
-        publisher = "RedHat"
-        offer     = "RHEL"
-        sku       = "7.3"
-        version   = "7.3.2017090723"
+        publisher = "${lookup(var.azure_os_image_map, join("_publisher", list(var.azure_os_image, "")))}"
+        offer     = "${lookup(var.azure_os_image_map, join("_offer", list(var.azure_os_image, "")))}"
+        sku       = "${lookup(var.azure_os_image_map, join("_sku", list(var.azure_os_image, "")))}"
+        version   = "${lookup(var.azure_os_image_map, join("_version", list(var.azure_os_image, "")))}"
     }
 
     os_profile {
@@ -281,10 +281,10 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
     }
 
     storage_image_reference {
-        publisher = "${lookup(var.os_image_map, join("_publisher", list(var.os_image, "")))}"
-        offer     = "${lookup(var.os_image_map, join("_offer", list(var.os_image, "")))}"
-        sku       = "${lookup(var.os_image_map, join("_sku", list(var.os_image, "")))}"
-        version   = "${lookup(var.os_image_map, join("_version", list(var.os_image, "")))}"
+        publisher = "${lookup(var.azure_os_image_map, join("_publisher", list(var.azure_os_image, "")))}"
+        offer     = "${lookup(var.azure_os_image_map, join("_offer", list(var.azure_os_image, "")))}"
+        sku       = "${lookup(var.azure_os_image_map, join("_sku", list(var.azure_os_image, "")))}"
+        version   = "${lookup(var.azure_os_image_map, join("_version", list(var.azure_os_image, "")))}"
     }
 
     os_profile {
