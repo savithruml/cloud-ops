@@ -1,3 +1,7 @@
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
 #!/bin/sh
 
 # Set SSH password, keyless SSH, stat hosts & install base packages
