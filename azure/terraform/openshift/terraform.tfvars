@@ -29,5 +29,8 @@ azure_instance_username                           = "contrail"
 # Azure Virtual Machine desired password
 azure_instance_password                           = "hello-world"
 
+# Azure RHEL subscription username
 azure_rhel_subscription_username                  = "hello-world"
+
+# Azure RHEL subscription password
 azure_rhel_subscription_password                  = "hello-world"
