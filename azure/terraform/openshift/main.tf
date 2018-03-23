@@ -262,10 +262,10 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
     }
 
     storage_image_reference {
-        publisher = "RedHat"
-        offer     = "RHEL"
-        sku       = "7.3"
-        version   = "7.3.2017090723"
+        publisher = "${lookup(var.os_image_map, join("_publisher", list(var.os_image, "")))}"
+        offer     = "${lookup(var.os_image_map, join("_offer", list(var.os_image, "")))}"
+        sku       = "${lookup(var.os_image_map, join("_sku", list(var.os_image, "")))}"
+        version   = "${lookup(var.os_image_map, join("_version", list(var.os_image, "")))}"
     }
 
     os_profile {
