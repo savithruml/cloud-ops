@@ -1,0 +1,5 @@
+---
+# This playbook deploys the Kubernetes cluster with Contrail CNI
+
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM

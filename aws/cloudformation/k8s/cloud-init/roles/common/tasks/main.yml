@@ -1,0 +1,68 @@
+---
+# This playbook deploys the Kubernetes cluster with Contrail CNI
+
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+
+- name: Install base packages
+  yum: name={{item}} state=present
+  with_items:
+    - ntp
+    - ntpdate
+    - docker
+    - python2-pip
+  tags: common
+
+- name: Enable & start docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  tags: common
+
+- name: Stop ntp service
+  service:
+    name: ntpd
+    state: stopped
+    enabled: yes
+  tags: common
+
+- name: Sync ntp service
+  shell: ntpdate -s time.nist.gov
+  tags: common
+
+- name: Start the ntp service
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+  tags: common
+
+- name: Ensure kubernetes repo file exists
+  file:
+    path: /etc/yum.repos.d/kubernetes.repo
+    state: touch
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Add kubernetes repo
+  blockinfile:
+    path: /etc/yum.repos.d/kubernetes.repo
+    block: |
+       [kubernetes]
+       name=Kubernetes
+       baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+       enabled=1
+       gpgcheck=1
+       repo_gpgcheck=1
+       gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+  tags: common
+
+- name: Install kubernetes packages
+  yum: name={{item}} state=present
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+  tags: common
