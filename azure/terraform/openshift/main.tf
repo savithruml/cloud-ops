@@ -227,17 +227,14 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
     }
 
     storage_image_reference {
-<<<<<<< HEAD
         publisher = "Openlogic"
         offer     = "CentOS"
         sku       = "7.3"
         version   = "latest"
-=======
         publisher = "${lookup(var.azure_os_image_map, join("_publisher", list(var.azure_os_image, "")))}"
         offer     = "${lookup(var.azure_os_image_map, join("_offer", list(var.azure_os_image, "")))}"
         sku       = "${lookup(var.azure_os_image_map, join("_sku", list(var.azure_os_image, "")))}"
         version   = "${lookup(var.azure_os_image_map, join("_version", list(var.azure_os_image, "")))}"
->>>>>>> c3cb0edc588ce017784c277e975fad67f3ea22b7
     }
 
     os_profile {
@@ -296,17 +293,14 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
     }
 
     storage_image_reference {
-<<<<<<< HEAD
         publisher = "Openlogic"
         offer     = "CentOS"
         sku       = "7.3"
         version   = "latest"
-=======
         publisher = "${lookup(var.azure_os_image_map, join("_publisher", list(var.azure_os_image, "")))}"
         offer     = "${lookup(var.azure_os_image_map, join("_offer", list(var.azure_os_image, "")))}"
         sku       = "${lookup(var.azure_os_image_map, join("_sku", list(var.azure_os_image, "")))}"
         version   = "${lookup(var.azure_os_image_map, join("_version", list(var.azure_os_image, "")))}"
->>>>>>> c3cb0edc588ce017784c277e975fad67f3ea22b7
     }
 
     os_profile {
