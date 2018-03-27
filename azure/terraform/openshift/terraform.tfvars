@@ -23,6 +23,9 @@ azure_virtual_network_subnet_azure_cidr           = "10.0.2.0/24"
 # Azure Virtual Machine instance flavor type
 azure_instance_flavor_type                        = "Standard_DS12_v2"
 
+# Azure Virtual Machine OS image
+azure_os_image                                    = "centos"
+
 # Azure Virtual Machine desired username
 azure_instance_username                           = "contrail"
 
