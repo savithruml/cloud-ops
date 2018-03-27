@@ -8,7 +8,6 @@
 
 set -eux
 
-sudo -u root bash << EOF
 sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
 service sshd restart
 echo root:$1 | chpasswd
