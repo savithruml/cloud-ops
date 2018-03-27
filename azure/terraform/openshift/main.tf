@@ -208,10 +208,10 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
     }
 
     storage_image_reference {
-        publisher = "RedHat"
-        offer     = "RHEL"
+        publisher = "Openlogic"
+        offer     = "CentOS"
         sku       = "7.3"
-        version   = "7.3.2017090723"
+        version   = "latest"
     }
 
     os_profile {
@@ -229,6 +229,14 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
         storage_uri = "${azurerm_storage_account.contrail-storage-account.primary_blob_endpoint}"
     }
 
+    connection {
+        user = "${var.azure_instance_username}"
+        password = "${var.azure_instance_password}"
+        host = "${azurerm_public_ip.contrail-master-public-ip.fqdn}"
+        type = "ssh"
+        agent = "false"
+    }
+
     provisioner "file" {
         source      = "cloud-init/master.sh"
         destination = "/tmp/master.sh"
@@ -237,7 +245,7 @@ resource "azurerm_virtual_machine" "contrail-os-master" {
     provisioner "remote-exec" {
         inline = [
             "chmod +x /tmp/master.sh",
-            "sudo /tmp/master.sh ${var.azure_instance_password} ${var.azure_rhel_subscription_username} ${var.azure_rhel_subscription_password}"
+            "echo ${var.azure_instance_password} | sudo -S /tmp/master.sh ${var.azure_instance_password} ${var.azure_rhel_subscription_username} ${var.azure_rhel_subscription_password}"
         ]
     }
 
@@ -262,10 +270,10 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
     }
 
     storage_image_reference {
-        publisher = "RedHat"
-        offer     = "RHEL"
+        publisher = "Openlogic"
+        offer     = "CentOS"
         sku       = "7.3"
-        version   = "7.3.2017090723"
+        version   = "latest"
     }
 
     os_profile {
@@ -283,15 +291,19 @@ resource "azurerm_virtual_machine" "contrail-os-minion" {
         storage_uri = "${azurerm_storage_account.contrail-storage-account.primary_blob_endpoint}"
     }
 
-    provisioner "file" {
-        source      = "cloud-init/minion.sh"
-        destination = "/tmp/minion.sh"
+    connection {
+        user = "${var.azure_instance_username}"
+        password = "${var.azure_instance_password}"
+        host = "${azurerm_public_ip.contrail-minion-public-ip.fqdn}" 
+        type = "ssh"
+        agent = "false"
     }
 
     provisioner "remote-exec" {
         inline = [
-            "chmod +x /tmp/minion.sh",
-            "sudo /tmp/minion.sh ${var.azure_instance_password} ${var.azure_rhel_subscription_username} ${var.azure_rhel_subscription_password}"
+            "wget https://raw.githubusercontent.com/savithruml/cloud-ops/master/azure/terraform/openshift/cloud-init/minion.sh",
+            "chmod +x minion.sh",
+            "echo ${var.azure_instance_password} | sudo -S sh ./minion.sh",
         ]
     }
 
