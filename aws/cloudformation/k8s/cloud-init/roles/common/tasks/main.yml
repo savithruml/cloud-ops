@@ -13,6 +13,10 @@
     - python2-pip
   tags: common
 
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
 - name: Enable & start docker service
   service:
     name: docker
