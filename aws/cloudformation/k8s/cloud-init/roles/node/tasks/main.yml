@@ -21,11 +21,20 @@
   delegate_to: "{{ groups['masters'][0] }}"
   tags: node
 
-- name: Get master hostname
+- name: Get master public hostname
   uri:
     url: http://169.254.169.254/latest/meta-data/public-hostname
     return_content: yes
   register: hostname_master 
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Get master private hostname
+  command: hostname -f
+  register: hostname_private_master
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Label master with opencontrail.org/controller=true
+  command: kubectl label node "{{ hostname_private_master.content }}" opencontrail.org/controller=true
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Get node hostname
