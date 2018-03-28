@@ -16,6 +16,7 @@
 - name: Disable SELinux
   selinux:
     state: disabled
+  tags: common
 
 - name: Enable & start docker service
   service:
