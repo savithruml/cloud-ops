@@ -10,6 +10,7 @@
   become: true
   roles:
     - common
+  tags: common
 
 - name: Deploy kubernetes masters
   hosts: masters
@@ -17,6 +18,7 @@
   become: true
   roles:
     - master
+  tags: master
 
 - name: Deploy kubernetes nodes
   hosts: nodes
@@ -24,3 +26,4 @@
   become: true
   roles:
     - node
+  tags: node

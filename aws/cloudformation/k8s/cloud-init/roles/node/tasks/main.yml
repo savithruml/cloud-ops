@@ -5,21 +5,17 @@
 # Contact: SAVITHRU AT ICLOUD DOT COM
 - name: Reset kubernetes if installed
   shell: kubeadm reset
-  tags: node
 
 - name: Register nodes to master
   shell: kubeadm join {{ groups['masters'][0] }}:6443 --token {{ hostvars[groups['masters'][0]]['token'] }} --discovery-token-unsafe-skip-ca-verification
-  tags: node
 
 - name: Launch Contrail Networking
   shell: kubectl apply -f /tmp/contrail-installer.yml
   delegate_to: "{{ groups['masters'][0] }}"
-  tags: node
 
 - name: Launch kubernetes dashboard
   shell: kubectl create -f /tmp/k8s-dashboard.yml
   delegate_to: "{{ groups['masters'][0] }}"
-  tags: node
 
 - name: Get master public hostname
   uri:
@@ -34,7 +30,7 @@
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Label master with opencontrail.org/controller=true
-  command: kubectl label node "{{ hostname_private_master.content }}" opencontrail.org/controller=true
+  command: kubectl label node "{{ hostname_private_master.stdout }}" opencontrail.org/controller=true
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Get node hostname

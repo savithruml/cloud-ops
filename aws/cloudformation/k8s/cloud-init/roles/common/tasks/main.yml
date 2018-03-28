@@ -11,37 +11,31 @@
     - ntpdate
     - docker
     - python2-pip
-  tags: common
 
 - name: Disable SELinux
   selinux:
     state: disabled
-  tags: common
 
 - name: Enable & start docker service
   service:
     name: docker
     state: started
     enabled: yes
-  tags: common
 
 - name: Stop ntp service
   service:
     name: ntpd
     state: stopped
     enabled: yes
-  tags: common
 
 - name: Sync ntp service
-  shell: ntpdate -s time.nist.gov
-  tags: common
+  command: ntpdate -s time.nist.gov
 
 - name: Start the ntp service
   service:
     name: ntpd
     state: started
     enabled: yes
-  tags: common
 
 - name: Ensure kubernetes repo file exists
   file:
@@ -62,7 +56,6 @@
        gpgcheck=1
        repo_gpgcheck=1
        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-  tags: common
 
 - name: Upgrade all packages
   yum:
@@ -75,4 +68,3 @@
     - kubelet
     - kubeadm
     - kubectl
-  tags: common
