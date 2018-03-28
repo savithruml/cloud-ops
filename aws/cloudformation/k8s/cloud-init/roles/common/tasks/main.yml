@@ -59,6 +59,11 @@
        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
   tags: common
 
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
 - name: Install kubernetes packages
   yum: name={{item}} state=present
   with_items:

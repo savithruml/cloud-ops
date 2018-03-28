@@ -3,3 +3,59 @@
 
 # Author: SAVITHRU LOKANATH
 # Contact: SAVITHRU AT ICLOUD DOT COM
+
+- name: Reset kubernetes if installed
+  shell: kubeadm reset
+  register: reset
+  tags: master
+
+- name: Generate kubeadm token
+  when: reset | success
+  shell: kubeadm token generate
+  register: kubeadm_token
+  tags: master
+
+- name: Get token
+  set_fact: token={{ kubeadm_token.stdout }}
+  tags: master
+
+- name: Initialize kubernetes master
+  shell: kubeadm init --token {{ token }}
+  register: init
+  failed_when: "'FAILED' in init.stderr"
+  tags: master
+
+- name: Create kubernetes config directory
+  file:
+    path: "/root/.kube/"
+    state: directory
+  tags: master
+
+- name: Copy kubernetes config file
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/root/.kube/config"
+    owner: root
+    group: root
+    mode: 0755
+    remote_src: True
+  tags: master
+  
+- name: Set kubeconfig environment
+  shell: "echo $KUBECONFIG"
+  environment:
+    KUBECONFIG: "/root/.kube/config"
+  tags: master
+
+- name: Generate Contrail single YAML file
+  template:
+    src: contrail-installer.j2
+    dest: /tmp/contrail-installer.yml
+  tags: master
+
+- name: Download kubernetes dashboard YAML
+  get_url:
+    url: https://raw.githubusercontent.com/savithruml/nested-mode-contrail-networking/master/examples/k8s-dashboard.yml
+    dest: /tmp/k8s-dashboard.yml
+    mode: 0440
+  tags: master

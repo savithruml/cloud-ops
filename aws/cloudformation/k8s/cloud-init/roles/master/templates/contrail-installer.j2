@@ -1,42 +1,242 @@
 ---
-# YAML file to deploy Contrail CNI
-
-# Author: SAVITHRU LOKANATH
-# Contact: SAVITHRU AT ICLOUD DOT COM
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: contrail-config
+  name: env
   namespace: kube-system
 data:
-  global-config: |-
-    [GLOBAL]
-    cloud_orchestrator = kubernetes
-    sandesh_ssl_enable = False
-    enable_config_service = True
-    enable_control_service = True
-    enable_webui_service = True
-    introspect_ssl_enable = False
-    config_nodes = {{ groups['masters'][0] }}
-    controller_nodes = {{ groups['masters'][0] }}
-    analytics_nodes = {{ groups['masters'][0] }}
-    analyticsdb_nodes = {{ groups['masters'][0] }}
-    analyticsdb_minimum_diskgb = 15
-    configdb_minimum_diskgb = 10
-  agent-config: |-
-    [AGENT]
-    compile_vrouter_module = True
-  kubemanager-config: |-
-    [KUBERNETES]
-    cluster_name = k8s-default
-    cluster_project = {}
-    cluster_network = {}
-    service_subnets = 10.96.0.0/12
-    pod_subnets = 10.32.0.0/12
-    api_server = {{ groups['masters'][0] }}
-  kubernetes-agent-config: |-
-    [AGENT]
+  AAA_MODE: "{{ aaa_mode }}"
+  ANALYTICS_API_VIP: "{{ groups['masters'][0] }}"
+  ANALYTICS_NODES: "{{ groups['masters'][0] }}"
+  ANALYTICSDB_NODES: "{{ groups['masters'][0] }}"
+  AUTH_MODE: "{{ auth_mode }}"
+  CLOUD_ORCHESTRATOR: "{{ cloud_orchestrator }}"
+  CONFIG_API_VIP: "{{ groups['masters'][0] }}"
+  CONFIG_NODES: "{{ groups['masters'][0] }}"
+  CONFIGDB_NODES: "{{ groups['masters'][0] }}"
+  CONTROL_NODES: "{{ groups['masters'][0] }}"
+  CONTROLLER_NODES: "{{ groups['masters'][0] }}"
+  KAFKA_NODES: "{{ groups['masters'][0] }}"
+  LOG_LEVEL: "{{ log_level }}"
+  METADATA_PROXY_SECRET: "{{ metadata_proxy_secret }}"
+  PHYSICAL_INTERFACE: "{{ vrouter_physical_interface }}"
+  RABBITMQ_NODES: "{{ groups['masters'][0] }}"
+  RABBITMQ_NODE_PORT: "{{ rabbitmq_node_port }}"
+  REDIS_NODES: "{{ groups['masters'][0] }}"
+  WEBUI_NODES: "{{ groups['masters'][0] }}"
+  WEBUI_VIP: "{{ groups['masters'][0] }}"
+  ZOOKEEPER_NODES: "{{ groups['masters'][0] }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodemgr-config
+  namespace: kube-system
+data:
+  DOCKER_HOST: "unix://mnt/docker.sock"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contrail-analyticsdb-config
+  namespace: kube-system
+data:
+  CASSANDRA_SEEDS: "{{ groups['masters'][0] }}"
+  CASSANDRA_CLUSTER_NAME: Contrail
+  CASSANDRA_START_RPC: "true"
+  CASSANDRA_LISTEN_ADDRESS: auto
+  CASSANDRA_PORT: "9160"
+  CASSANDRA_CQL_PORT: "9042"
+  CASSANDRA_SSL_STORAGE_PORT: "7001"
+  CASSANDRA_STORAGE_PORT: "7000"
+  CASSANDRA_JMX_LOCAL_PORT: "7200"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contrail-configdb-config
+  namespace: kube-system
+data:
+  CASSANDRA_SEEDS: "{{ groups['masters'][0] }}"
+  CASSANDRA_CLUSTER_NAME: ContrailConfigDB
+  CASSANDRA_START_RPC: "true"
+  CASSANDRA_LISTEN_ADDRESS: auto
+  CASSANDRA_PORT: "9161"
+  CASSANDRA_CQL_PORT: "9041"
+  CASSANDRA_SSL_STORAGE_PORT: "7011"
+  CASSANDRA_STORAGE_PORT: "7010"
+  CASSANDRA_JMX_LOCAL_PORT: "7201"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+  namespace: kube-system
+data:
+  RABBITMQ_NODES: "{{ groups['masters'][0] }}"
+  RABBITMQ_NODE_PORT: "{{ rabbitmq_node_port }}"
+  RABBITMQ_ERLANG_COOKIE: "47EFF3BB-4786-46E0-A5BB-58455B3C2CB4"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contrail-config-zookeeper
+  namespace: kube-system
+data:
+  ZOOKEEPER_PORT: "{{ zookeeper_port }}"
+  ZOOKEEPER_PORTS: "{{ zookeeper_ports }}"
+  ZOOKEEPER_NODES: "{{ groups['masters'][0] }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contrail-analytics-zookeeper
+  namespace: kube-system
+data:
+  ZOOKEEPER_PORT: "{{ zookeeper_analytics_port }}"
+  ZOOKEEPER_PORTS: "{{ zookeeper_analytics_ports }}"
+  ZOOKEEPER_NODES: "{{ groups['masters'][0] }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-manager-config
+  namespace: kube-system
+data:
+  KUBERNETES_API_SERVER: "{{ groups['masters'][0] }}"
+  KUBERNETES_API_SECURE_PORT: "{{ kubernetes_api_secure_port }}"
+  K8S_TOKEN_FILE: "/tmp/serviceaccount/token"
+# Containers section
+# Meta information section
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: contrail
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: contrail
+  namespace: kube-system
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: contrail
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: contrail
+subjects:
+- kind: ServiceAccount
+  name: contrail
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: contrail-kube-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: contrail
+type: kubernetes.io/service-account-token
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: config-zookeeper
+  namespace: kube-system
+  labels:
+    app: config-zookeeper
+spec:
+  template:
+    metadata:
+      labels:
+        app: config-zookeeper
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: zookeeper
+        image: "{{ contrail_registry }}/contrail-external-zookeeper:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/lib/zookeeper
+          name: zookeeper-data
+        - mountPath: /var/log/zookeeper
+          name: zookeeper-logs
+      volumes:
+      - name: zookeeper-data
+        hostPath:
+          path: /var/lib/contrail/zookeeper
+      - name: zookeeper-logs
+        hostPath:
+          path: /var/log/contrail/zookeeper
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: kafka
+  namespace: kube-system
+  labels:
+    app: kafka
+spec:
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: kafka
+        image: "{{ contrail_registry }}/contrail-external-kafka:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /tmp/kafka-logs
+          name: kafka-logs
+      volumes:
+      - name: kafka-logs
+        hostPath:
+          path: /var/lib/contrail/kafka-logs
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -57,11 +257,6 @@ spec:
             nodeSelectorTerms:
             - matchExpressions:
               - key: "opencontrail.org/controller"
-                operator: In
-                values:
-                - "true"
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -70,25 +265,124 @@ spec:
       hostNetwork: true
       containers:
       - name: contrail-analyticsdb
-        image: "docker.io/opencontrail/contrail-analyticsdb-ubuntu16.04:4.0.2.0"
+        image: "{{ contrail_registry }}/contrail-external-cassandra:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
+        envFrom:
+        - configMapRef:
+            name: contrail-analyticsdb-config
         volumeMounts:
-        - mountPath: /etc/contrailctl
-          name: contrail-config
         - mountPath: /var/lib/cassandra
           name: analyticsdb-data
+        - mountPath: /var/log/cassandra
+          name: analyticsdb-log
       volumes:
-      - name: contrail-config
-        configMap:
-          name: contrail-config
-          items:
-          - key: global-config
-            path: analyticsdb.conf
       - name: analyticsdb-data
         hostPath:
-          path: /var/lib/analyticsdb 
+          path: /var/lib/contrail/analyticsdb
+      - name: analyticsdb-log
+        hostPath:
+          path: /var/log/contrail/analyticsdb
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: contrail-configdb
+  namespace: kube-system
+  labels:
+    app: contrail-configdb
+spec:
+  template:
+    metadata:
+      labels:
+        app: contrail-configdb
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: contrail-configdb
+        image: "{{ contrail_registry }}/contrail-external-cassandra:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: contrail-configdb-config
+        volumeMounts:
+        - mountPath: /var/lib/cassandra
+          name: configdb-data
+        - mountPath: /var/log/cassandra
+          name: configdb-log
+      volumes:
+      - name: configdb-data
+        hostPath:
+          path: /var/lib/contrail/configdb
+      - name: configdb-log
+        hostPath:
+          path: /var/log/contrail/configdb
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: contrail-analytics-zookeeper
+  namespace: kube-system
+  labels:
+    app: zookeeper
+spec:
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: zookeeper
+        image: "{{ contrail_registry }}/contrail-external-zookeeper:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/lib/zookeeper
+          name: zookeeper-data
+        - mountPath: /var/log/zookeeper
+          name: zookeeper-logs
+        volumeMounts:
+        - mountPath: /data
+          name: analytics-zookeeper-data
+        - mountPath: /datalog
+          name: analytics-zookeeper-datalog
+      volumes:
+      - name: analytics-zookeeper-data
+        hostPath:
+          path: /var/lib/analytics_zookeeper_data
+      - name: analytics-zookeeper-datalog
+        hostPath:
+          path: /var/lib/analytics_zookeeper_datalog
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -109,11 +403,6 @@ spec:
             nodeSelectorTerms:
             - matchExpressions:
               - key: "opencontrail.org/controller"
-                operator: In
-                values:
-                - "true"
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -121,34 +410,124 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       containers:
-      - name: contrail-analytics
-        image: "docker.io/opencontrail/contrail-analytics-ubuntu16.04:4.0.2.0"
+      - name: contrail-analytics-api
+        image: "{{ contrail_registry }}/contrail-analytics-api:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
         volumeMounts:
-        - mountPath: /etc/contrailctl
-          name: contrail-config
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-collector
+        image: "{{ contrail_registry }}/contrail-analytics-collector:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-alarm-gen
+        image: "{{ contrail_registry }}/contrail-analytics-alarm-gen:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-query-engine
+        image: "{{ contrail_registry }}/contrail-analytics-query-engine:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-snmp-collector
+        image: "{{ contrail_registry }}/contrail-analytics-snmp-collector:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-topology
+        image: "{{ contrail_registry }}/contrail-analytics-topology:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: contrail-analytics-nodemgr
+        image: "{{ contrail_registry }}/contrail-nodemgr:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-analytics-zookeeper
+        env:
+        - name: NODE_TYPE
+          value: analytics
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
       volumes:
-      - name: contrail-config
-        configMap:
-          name: contrail-config
-          items:
-          - key: global-config
-            path: analytics.conf
+      - name: analytics-logs
+        hostPath:
+          path: /var/log/contrail/analytics
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: contrail-controller
+  name: contrail-controller-control
   namespace: kube-system
   labels:
-    app: contrail-controller
+    app: contrail-controller-control
 spec:
   template:
     metadata:
       labels:
-        app: contrail-controller
+        app: contrail-controller-control
     spec:
       affinity:
         nodeAffinity:
@@ -156,11 +535,6 @@ spec:
             nodeSelectorTerms:
             - matchExpressions:
               - key: "opencontrail.org/controller"
-                operator: In
-                values:
-                - "true"
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -168,31 +542,342 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       containers:
-      - name: contrail-controller
-        image: "docker.io/opencontrail/contrail-controller-ubuntu16.04:4.0.2.0"
+      - name: contrail-controller-control
+        image: "{{ contrail_registry }}/contrail-controller-control-control:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
         volumeMounts:
-        - mountPath: /etc/contrailctl
-          name: contrail-config
-        - mountPath: /var/lib/cassandra
-          name: configdb-data
-        - mountPath: /var/lib/zookeeper
-          name: zookeeper-data
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-control-dns
+        image: "{{ contrail_registry }}/contrail-controller-control-dns:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-control-named
+        image: "{{ contrail_registry }}/contrail-controller-control-named:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-nodemgr
+        image: "{{ contrail_registry }}/contrail-nodemgr:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-config-zookeeper
+        env:
+        - name: NODE_TYPE
+          value: control
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: control-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
       volumes:
-      - name: contrail-config
-        configMap:
-          name: contrail-config
-          items:
-          - key: global-config
-            path: controller.conf
-      - name: configdb-data
-        hostPath: 
-          path: /var/lib/configdb
-      - name: zookeeper-data
-        hostPath: 
-          path: /var/lib/config_zookeeper_data
+      - name: control-logs
+        hostPath:
+          path: /var/log/contrail/control
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: dns-config
+        emptyDir: {}
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: contrail-controller-config
+  namespace: kube-system
+  labels:
+    app: contrail-controller-config
+spec:
+  template:
+    metadata:
+      labels:
+        app: contrail-controller-config
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: contrail-controller-config-api
+        image: "{{ contrail_registry }}/contrail-controller-config-api:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-devicemgr
+        image: "{{ contrail_registry }}/contrail-controller-config-devicemgr:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-schema
+        image: "{{ contrail_registry }}/contrail-controller-config-schema:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-svcmonitor
+        image: "{{ contrail_registry }}/contrail-controller-config-svcmonitor:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-nodemgr
+        image: "{{ contrail_registry }}/contrail-nodemgr:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-config-zookeeper
+        env:
+        - name: NODE_TYPE
+          value: config
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      volumes:
+      - name: config-logs
+        hostPath:
+          path: /var/log/contrail/config
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: contrail-controller-webui
+  namespace: kube-system
+  labels:
+    app: contrail-controller-webui
+spec:
+  template:
+    metadata:
+      labels:
+        app: contrail-controller-webui
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: contrail-controller-webui-job
+        image: "{{ contrail_registry }}/contrail-controller-webui-job:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: webui-logs
+      - name: contrail-controller-webui-web
+        image: "{{ contrail_registry }}/contrail-controller-webui-web:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: webui-logs
+      volumes:
+      - name: webui-logs
+        hostPath:
+          path: /var/log/contrail/webui
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: redis
+  namespace: kube-system
+  labels:
+    app: redis
+spec:
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: redis
+        image: "redis:4.0.2"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/lib/redis
+          name: redis-data
+        - mountPath: /var/log/redis
+          name: redis-logs
+      volumes:
+      - name: redis-data
+        hostPath:
+          path: /var/lib/contrail/redis
+      - name: redis-logs
+        hostPath:
+          path: /var/log/contrail/redis
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: rabbitmq
+  namespace: kube-system
+  labels:
+    app: rabbitmq
+spec:
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "opencontrail.org/controller"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: rabbitmq
+        image: "{{ contrail_registry }}/contrail-external-rabbitmq:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: rabbitmq-config
+        - configMapRef:
+            name: contrail-config-zookeeper
+        volumeMounts:
+        - mountPath: /var/lib/rabbitmq
+          name: rabbitmq-data
+        - mountPath: /var/log/rabbitmq
+          name: rabbitmq-logs
+      volumes:
+      - name: rabbitmq-data
+        hostPath:
+          path: /var/lib/contrail/rabbitmq
+      - name: rabbitmq-logs
+        hostPath:
+          path: /var/log/contrail/rabbitmq
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -212,12 +897,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "opencontrail.org/controller"
-                operator: In
-                values:
-                - "true"
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
+              - key: "opencontrail.org/controller" 
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -227,24 +907,26 @@ spec:
       hostNetwork: true
       containers:
       - name: contrail-kube-manager
-        image: "docker.io/opencontrail/contrail-kube-manager-ubuntu16.04:4.0.2.0"
+        image: "{{ contrail_registry }}/contrail-kubernetes-kube-manager:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: kube-manager-config
+        - configMapRef:
+            name: contrail-config-zookeeper
         volumeMounts:
-        - mountPath: /tmp/contrailctl
-          name: tmp-contrail-config
+        - mountPath: /var/log/contrail
+          name: kube-manager-logs
         - mountPath: /tmp/serviceaccount
           name: pod-secret
       volumes:
-      - name: tmp-contrail-config
-        configMap:
-          name: contrail-config
-          items:
-          - key: global-config
-            path: global.conf
-          - key: kubemanager-config
-            path: kubemanager.conf
+      - name: kube-manager-logs
+        hostPath:
+          path: /var/log/contrail/kube-manager
       - name: pod-secret
         secret:
           secretName: contrail-kube-manager-token
@@ -262,80 +944,92 @@ spec:
       labels:
         app: contrail-agent
     spec:
-      #Disable affinity for single node setup
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
               - key: "opencontrail.org/controller"
-                operator: NotIn
-                values:
-                - "true"
-            - matchExpressions:
-              - key: "node-role.kubernetes.io/master"
-                operator: Exists
-      #Enable tolerations for single node setup
-      #tolerations:
-      #- key: node-role.kubernetes.io/master
-      #  operator: Exists
-      #  effect: NoSchedule
+                operator: DoesNotExist
       automountServiceAccountToken: false
       hostNetwork: true
       initContainers:
-      - name: contrail-kubernetes-agent
-        image: "docker.io/opencontrail/contrail-kubernetes-agent-ubuntu16.04:4.0.2.0"
+      - name: contrail-vrouter-kernel-init
+        image: "{{ contrail_registry }}/contrail-vrouter-kernel-init:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
-        volumeMounts:
-        - mountPath: /tmp/contrailctl
-          name: tmp-contrail-config
-        - mountPath: /var/lib/contrail/
-          name: var-lib-contrail
-        - mountPath: /host/etc_cni
-          name: etc-cni
-        - mountPath: /host/opt_cni_bin
-          name: opt-cni-bin
-        - mountPath: /var/log/contrail/cni
-          name: var-log-contrail-cni
-      containers:
-      - name: contrail-agent
-        image: "docker.io/opencontrail/contrail-agent-ubuntu16.04:4.0.2.0"
-        imagePullPolicy: ""
-        securityContext:
-          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
         volumeMounts:
         - mountPath: /usr/src
           name: usr-src
         - mountPath: /lib/modules
           name: lib-modules
-        - mountPath: /tmp/contrailctl
-          name: tmp-contrail-config
-        - mountPath: /var/lib/contrail/
+      - name: contrail-kubernetes-cni-init
+        image: "{{ contrail_registry }}/contrail-kubernetes-cni-init:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/lib/contrail
           name: var-lib-contrail
         - mountPath: /host/etc_cni
           name: etc-cni
         - mountPath: /host/opt_cni_bin
           name: opt-cni-bin
-        # This is a workaround just to make sure the directory is created on host
-        - mountPath: /var/log/contrail/cni
+        - mountPath: /host/log_cni
           name: var-log-contrail-cni
+        - mountPath: /var/log/contrail
+          name: agent-logs
+      containers:
+      - name: contrail-vrouter-agent
+        image: "{{ contrail_registry }}/contrail-vrouter-agent:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /var/crashes
+          name: var-crashes
         - mountPath: /tmp/serviceaccount
           name: pod-secret
+      - name: contrail-agent-nodemgr
+        image: "{{ contrail_registry }}/contrail-nodemgr:{{ contrail_container_tag }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: vrouter
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
       volumes:
-      - name: tmp-contrail-config
-        configMap:
-          name: contrail-config
-          items:
-          - key: global-config
-            path: global.conf
-          - key: agent-config
-            path: agent.conf
-          - key: kubemanager-config
-            path: kubemanager.conf
-          - key: kubernetes-agent-config
-            path: kubernetesagent.conf
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
       - name: pod-secret
         secret:
           secretName: contrail-kube-manager-token
@@ -347,7 +1041,10 @@ spec:
           path: /lib/modules
       - name: var-lib-contrail
         hostPath:
-          path: /var/lib/contrail/
+          path: /var/lib/contrail
+      - name: var-crashes
+        hostPath:
+          path: /var/contrail/crashes
       - name: etc-cni
         hostPath:
           path: /etc/cni
@@ -356,42 +1053,7 @@ spec:
           path: /opt/cni/bin
       - name: var-log-contrail-cni
         hostPath:
-          path: /var/log/contrail/cni/
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: contrail-kube-manager
-  namespace: kube-system
-rules:
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: contrail-kube-manager
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: contrail-kube-manager
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: contrail-kube-manager
-subjects:
-- kind: ServiceAccount
-  name: contrail-kube-manager
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: contrail-kube-manager-token
-  namespace: kube-system
-  annotations: 
-    kubernetes.io/service-account.name: contrail-kube-manager
-type: kubernetes.io/service-account-token
+          path: /var/log/contrail/cni
+      - name: agent-logs
+        hostPath:
+          path: /var/log/contrail/agent
