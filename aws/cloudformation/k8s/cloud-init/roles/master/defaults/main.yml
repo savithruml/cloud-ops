@@ -11,5 +11,5 @@ zookeeper_port: 2181
 zookeeper_ports: 2888:3888
 zookeeper_analytics_ports: 4888:5888
 vrouter_physical_interface: eth0
-kubernetes_api_secure_port: 8443
+kubernetes_api_secure_port: 6443
 contrail_registry: docker.io/opencontrailnightly
