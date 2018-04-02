@@ -26,7 +26,7 @@ data:
   WEBUI_NODES: "{{ groups['masters'][0] }}"
   WEBUI_VIP: "{{ groups['masters'][0] }}"
   ZOOKEEPER_NODES: "{{ groups['masters'][0] }}"
-  KUBERNETES_CLUSTER_NETWORK="{'domain': 'default-domain', 'project': 'default', 'name': 'cluster-network'}"
+  KUBERNETES_CLUSTER_NETWORK: "{'domain': 'default-domain', 'project': 'default', 'name': 'cluster-network'}"
 ---
 apiVersion: v1
 kind: ConfigMap
