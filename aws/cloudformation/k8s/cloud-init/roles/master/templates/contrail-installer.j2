@@ -113,13 +113,13 @@ data:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: contrail
+  name: contrail-kube-manager
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: contrail
+  name: contrail-kube-manager
   namespace: kube-system
 rules:
   - apiGroups: ["*"]
@@ -129,14 +129,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contrail
+  name: contrail-kube-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: contrail
+  name: contrail-kube-manager
 subjects:
 - kind: ServiceAccount
-  name: contrail
+  name: contrail-kube-manager
   namespace: kube-system
 ---
 apiVersion: v1
@@ -145,7 +145,7 @@ metadata:
   name: contrail-kube-manager-token
   namespace: kube-system
   annotations:
-    kubernetes.io/service-account.name: contrail
+    kubernetes.io/service-account.name: contrail-kube-manager
 type: kubernetes.io/service-account-token
 ---
 apiVersion: extensions/v1beta1
