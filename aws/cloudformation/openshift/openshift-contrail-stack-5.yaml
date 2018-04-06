@@ -1,0 +1,339 @@
+---
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Stack to deploy Kubernetes with OpenContrail SDN
+  CONTACT: Savithru Lokanath <savithru@icloud.com>
+
+Parameters:
+  InstanceType:
+    Description: EC2 instance type (Default = t2.xlarge)
+    Type: String
+    Default: t2.xlarge
+    AllowedValues:
+    - t2.micro
+    - t2.xlarge
+    - t2.2xlarge
+    - m1.xlarge
+    ConstraintDescription: must be a valid EC2 instance type
+
+  VpcCIDR:
+    Description: CIDR block for the VPC (Default = 10.10.0.0/16)
+    Type: String
+    Default: 10.10.0.0/16
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+
+  SubnetCIDR:
+    Description: CIDR block for the VPC subnet (Default = 10.10.10.0/24)
+    Type: String
+    Default: 10.10.10.0/24
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+    
+  MasterIPv4Address:
+    Description: Master instance's IPv4 Address (Default = 10.10.10.10)
+    Type: String
+    Default: 10.10.10.10
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+    
+  MinionIPv4Address:
+    Description: Minion instance's IPv4 Address (Default = 10.10.10.11)
+    Type: String
+    Default: 10.10.10.11
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x    
+
+  SSHLocation:
+    Description: Allow access to EC2 instances from (Default = 0.0.0.0/0)
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+
+  InstancePassword:
+    Description: Password for the instances
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 20
+    AllowedPattern: ^[a-zA-Z0-9]*$
+
+  ContrailBuild:
+    Description: Contrail build information
+    Type: String
+    AllowedValues:
+    - newton-master-39
+    - newton-master-38
+    - newton-master-34
+    Default: newton-master-39
+
+Mappings:
+  AWSInstanceType2Arch:
+    t2.micro:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    t2.xlarge:
+      Arch: HVM64
+    m1.xlarge:
+      Arch: PV64
+    
+  AWSInstanceType2NATArch:
+    t2.micro:
+      Arch: NATHVM64
+    t2.large:
+      Arch: NATHVM64
+    t2.xlarge:
+      Arch: NATHVM64
+    m1.xlarge:
+      Arch: NATPV64
+    
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-4bf3d731
+    us-east-2:
+      HVM64: ami-e1496384
+    us-west-1:
+      HVM64: ami-65e0e305
+    us-west-2:
+      HVM64: ami-a042f4d8
+    eu-west-1:
+      HVM64: ami-6e28b517
+    eu-west-2:
+      HVM64: ami-ee6a718a
+    eu-west-3:
+      HVM64: ami-bfff49c2
+    eu-central-1:
+      HVM64: ami-337be65c
+    ap-northeast-1:
+      HVM64: ami-25bd2743
+    ap-northeast-2:
+      HVM64: ami-7248e81c
+    ap-southeast-1:
+      HVM64: ami-d2fa88ae
+    ap-southeast-2:
+      HVM64: ami-b6bb47d4
+    ap-south-1:
+      HVM64: ami-5d99ce32
+    ca-central-1:
+      HVM64: ami-dcad28b8
+    sa-east-1:
+      HVM64: ami-f9adef95
+    
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:
+        Ref: VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-vpc-${AWS::StackName}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-gw-${AWS::StackName}
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: SubnetCIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-subnet-A-${AWS::StackName}
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-rt-internet-${AWS::StackName}
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTable
+
+  SubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref SubnetA
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: OpenShift AWS Group
+      GroupDescription: Allow all in/out
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-sec-grp-${AWS::StackName}
+
+  NetworkInterfaceMaster:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      PrivateIpAddress: !Ref MasterIPv4Address
+      SubnetId: !Ref SubnetA
+      Description: eth0 interface for master instance
+      GroupSet: 
+      - !Ref SecurityGroup
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-master-int-eth0-${AWS::StackName}
+
+  EC2InstanceMaster:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            apt:
+              apache2: []
+              libapache2-mod-wsgi: []
+          services:
+            sysvinit:
+              apache2:
+                enabled: true
+                ensureRunning: true
+
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
+          !Ref 'InstanceType', Arch]]
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 150
+            VolumeType: gp2
+            DeleteOnTermination: true
+      NetworkInterfaces:
+        -
+          NetworkInterfaceId: !Ref NetworkInterfaceMaster
+          DeviceIndex: 0
+      UserData: 
+        Fn::Base64: !Sub |
+          #!/bin/bash
+
+          sudo -u root bash << EOF
+          sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
+          service sshd restart
+          echo root:${InstancePassword} | chpasswd
+          yum update -y && yum --enablerepo=extras install epel-release -y
+          yum install python git wget vim sshpass ansible httpd python-setuptools python-pip -y
+          setenforce 0 || true
+          cd /tmp && git clone https://github.com/savithruml/openshift-ansible -b contrail-openshift
+          ssh-keygen -t rsa -C "" -P "" -f "/root/.ssh/id_rsa" -q
+          sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MasterIPv4Address}
+          sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MinionIPv4Address}
+      Tags:
+        -
+          Key: Name
+          Value: !Sub master-${AWS::StackName}
+          
+  NetworkInterfaceMinion:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      PrivateIpAddress: !Ref MinionIPv4Address
+      SubnetId: !Ref SubnetA
+      Description: eth0 interface for minion instance
+      GroupSet: 
+      - !Ref SecurityGroup
+      Tags:
+        -
+          Key: Name
+          Value: !Sub openshift-minion-int-eth0-${AWS::StackName}
+
+  EC2InstanceMinion:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
+          !Ref 'InstanceType', Arch]]
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 150
+            VolumeType: gp2
+            DeleteOnTermination: true
+      NetworkInterfaces:
+        -
+          NetworkInterfaceId: !Ref NetworkInterfaceMinion
+          DeviceIndex: 0
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
+          service sshd restart
+          echo root:${InstancePassword} | chpasswd
+          yum update -y && yum --enablerepo=extras install epel-release -y
+          yum install python python-pip wget vim -y
+          setenforce 0 || true
+          reboot
+
+      Tags:
+        -
+          Key: Name
+          Value: !Sub minion-${AWS::StackName}
+
+Outputs:
+  ContrailDashboard:
+    Description: Contrail Web-UI
+    Value: !Sub "https://${EC2InstanceMaster.PublicDnsName}:8143"
+
+  KubernetesDashboard:
+    Description: OpenShift Web-UI
+    Value: !Sub "https://${EC2InstanceMaster.PublicDnsName}:8443"
+
+  ShellURL:
+    Description: Access shell using this URL (Works with Chrome browser only. Secure shell plugin required)
+    Value: !Sub "ssh root@${EC2InstanceMaster.PublicDnsName}"
+
+  UsernamePassword:
+    Description: Contrail Web-UI username
+    Value: admin/contrail123
+
+  Examples:
+    Description: Examples to try
+    Value: "https://github.com/savithruml/openshift-contrail/tree/master/openshift/examples"
