@@ -30,3 +30,4 @@ analyticsdb_min_diskgb=50
 configdb_min_diskgb=25
 contrail_container_tag=newton-master-44
 vrouter_physical_interface=eth0
+
