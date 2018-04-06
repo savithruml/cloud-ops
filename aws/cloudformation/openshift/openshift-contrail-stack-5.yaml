@@ -67,10 +67,10 @@ Parameters:
     Description: Contrail build information
     Type: String
     AllowedValues:
+    - newton-master-44
     - newton-master-39
-    - newton-master-38
     - newton-master-34
-    Default: newton-master-39
+    Default: newton-master-44
 
 Mappings:
   AWSInstanceType2Arch:
@@ -271,15 +271,18 @@ Resources:
           wget -O ~/openshift-ansible/inventory/byo/ose-install https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-install
           cat >> ~/openshift-ansible/inventory/byo/ose-install << EOF
           [masters]
-          ${MasterIPv4Address}
+          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
 
           [etcd]
-          ${MasterIPv4Address}
+          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
 
           [nodes]
-          ${MasterIPv4Address}
-          ${MinionIPv4Address}
+          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
+          ${MinionIPv4Address} openshift_hostname=${EC2InstanceMinion.PrivateDnsName}
           EOF
+          sed -i -e 's/contrail_container_tag=newton-master-44/contrail_container_tag=${ContrailBuild}/g' /etc/ssh/sshd_config ContrailBuild
+          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/inventory/byo/ose-prerequisites.yml
+          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/openshift_facts.yml
           /usr/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceMaster --region ${AWS::Region}          
 
       Tags:
