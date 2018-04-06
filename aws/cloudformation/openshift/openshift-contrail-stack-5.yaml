@@ -5,7 +5,7 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Stack to deploy Kubernetes with OpenContrail SDN
+  Stack to deploy RedHat OpenShift with OpenContrail SDN
   CONTACT: Savithru Lokanath <savithru@icloud.com>
 
 Parameters:
@@ -220,22 +220,10 @@ Resources:
 
   EC2InstanceMaster:
     Type: AWS::EC2::Instance
+    DependsOn: EC2InstanceMinion
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
-    Metadata:
-      AWS::CloudFormation::Init:
-        config:
-          packages:
-            apt:
-              apache2: []
-              libapache2-mod-wsgi: []
-          services:
-            sysvinit:
-              apache2:
-                enabled: true
-                ensureRunning: true
-
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
@@ -276,13 +264,13 @@ Resources:
           wget -O ~/openshift-ansible/inventory/byo/ose-install https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-install
           cat >> ~/openshift-ansible/inventory/byo/ose-install << EOF
           [masters]
-          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
+          ${MasterIPv4Address} openshift_hostname=$HOSTNAME
 
           [etcd]
-          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
+          ${MasterIPv4Address} openshift_hostname=$HOSTNAME
 
           [nodes]
-          ${MasterIPv4Address} openshift_hostname=${EC2InstanceMaster.PrivateDnsName}
+          ${MasterIPv4Address} openshift_hostname=$HOSTNAME
           ${MinionIPv4Address} openshift_hostname=${EC2InstanceMinion.PrivateDnsName}
           EOF
           sed -i -e 's/contrail_container_tag=newton-master-44/contrail_container_tag=${ContrailBuild}/g' /etc/ssh/sshd_config ContrailBuild
