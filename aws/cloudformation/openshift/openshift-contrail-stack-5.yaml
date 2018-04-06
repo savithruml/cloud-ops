@@ -267,8 +267,9 @@ Resources:
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MasterIPv4Address}
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MinionIPv4Address}
           easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
-          /usr/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceMaster --region ${AWS::Region}
-          cat >> /tmp/openshift-ansible/inventory/byo/ose-install << EOF
+          wget -O ~/openshift-ansible/inventory/byo/ose-prerequisites.yml https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-prerequisites.yml
+          wget -O ~/openshift-ansible/inventory/byo/ose-install https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-install
+          cat >> ~/openshift-ansible/inventory/byo/ose-install << EOF
           [masters]
           ${MasterIPv4Address}
 
@@ -278,7 +279,9 @@ Resources:
           [nodes]
           ${MasterIPv4Address}
           ${MinionIPv4Address}
-          
+          EOF
+          /usr/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceMaster --region ${AWS::Region}          
+
       Tags:
         -
           Key: Name
