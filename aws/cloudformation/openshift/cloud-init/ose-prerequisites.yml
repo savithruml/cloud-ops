@@ -16,7 +16,7 @@
     - ntp
     - NetworkManager
 
-  - name: Install Openshift Enterprise package
+  - name: Install openshift-enterprise package
     yum: name="{{ item }}" state=present
     with_items:
     - atomic-openshift-docker-excluder
@@ -26,14 +26,20 @@
   - name: Install docker-py
     command: pip install docker-py
 
-  - name: Install Docker
+  - name: Install docker
     yum:
       name: docker-1.12.6
       state: present
 
-  - name: Enable & start Docker service
+  - name: Enable & start docker service
     service:
       name: docker
+      state: started
+      enabled: yes
+      
+  - name: Enble & start network-manager service
+    service:
+      name: NetworkManager
       state: started
       enabled: yes
 
