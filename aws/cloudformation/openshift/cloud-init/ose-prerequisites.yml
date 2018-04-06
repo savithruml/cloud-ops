@@ -1,0 +1,52 @@
+---
+- hosts: OSEv3
+  tasks:
+  - name: Install base packages
+    yum: name="{{ item }}" state=present
+    with_items:
+    - net-tools
+    - bind-utils
+    - iptables-services
+    - bridge-utils
+    - bash-completion
+    - python-pip
+    - kexec-tools
+    - sos
+    - psacct
+    - ntp
+
+  - name: Install Openshift Enterprise package
+    yum: name="{{ item }}" state=present
+    with_items:
+    - atomic-openshift-docker-excluder
+    when:
+    - deployment_type == "openshift-enterprise"
+    
+  - name: Install docker-py
+    command: pip install docker-py
+
+  - name: Install Docker
+    yum:
+      name: docker-1.12.6
+      state: present
+
+  - name: Enable & start Docker service
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: Stop ntp service
+    service:
+      name: ntpd
+      state: stopped
+      enabled: yes
+
+  - name: Sync ntp service
+    command: ntpdate -s time.nist.gov
+
+  - name: Start the ntp service
+    service:
+      name: ntpd
+      state: started
+      enabled: yes
