@@ -22,7 +22,6 @@ openshift_use_openshift_sdn=false
 openshift_disable_check=docker_storage,package_version
 os_sdn_network_plugin_name='cni'
 
-
 # Below are Contrail variables. Comment them out if you don't want to install Contrail through ansible-playbook
 
 openshift_use_contrail=true
@@ -31,4 +30,3 @@ analyticsdb_min_diskgb=50
 configdb_min_diskgb=25
 contrail_container_tag=newton-master-44
 vrouter_physical_interface=eth0
-
