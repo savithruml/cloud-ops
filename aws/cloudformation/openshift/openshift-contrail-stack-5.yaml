@@ -273,6 +273,11 @@ Resources:
           ${MasterIPv4Address} openshift_hostname=$HOSTNAME
           ${MinionIPv4Address} openshift_hostname=${EC2InstanceMinion.PrivateDnsName}
           EOF
+
+          cat >> /etc/hosts << EOF
+          127.0.0.1 $HOSTNAME
+          EOF
+
           sed -i -e 's/contrail_container_tag=newton-master-44/contrail_container_tag=${ContrailBuild}/g' /etc/ssh/sshd_config ContrailBuild
           ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/inventory/byo/ose-prerequisites.yml
           ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/openshift_facts.yml
@@ -328,6 +333,11 @@ Resources:
           yum update -y && yum --enablerepo=extras install epel-release -y
           yum install python python-pip wget vim -y
           setenforce 0 || true
+
+          cat >> /etc/hosts << EOF
+          127.0.0.1 $HOSTNAME
+          EOF
+
           reboot
 
       Tags:
