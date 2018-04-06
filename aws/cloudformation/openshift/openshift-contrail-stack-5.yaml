@@ -340,7 +340,7 @@ Outputs:
     Description: Contrail Web-UI
     Value: !Sub "https://${EC2InstanceMaster.PublicDnsName}:8143"
 
-  KubernetesDashboard:
+  OpenShiftDashboard:
     Description: OpenShift Web-UI
     Value: !Sub "https://${EC2InstanceMaster.PublicDnsName}:8443"
 
