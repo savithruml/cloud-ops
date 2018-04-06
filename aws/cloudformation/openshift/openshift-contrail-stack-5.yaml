@@ -269,6 +269,15 @@ Resources:
           easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
           /usr/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceMaster --region ${AWS::Region}
           cat >> /tmp/openshift-ansible/inventory/byo/ose-install << EOF
+          [masters]
+          ${MasterIPv4Address}
+
+          [etcd]
+          ${MasterIPv4Address}
+
+          [nodes]
+          ${MasterIPv4Address}
+          ${MinionIPv4Address}
           
       Tags:
         -
