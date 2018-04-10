@@ -281,10 +281,16 @@ Resources:
           cat >> /etc/hosts << EOF
           127.0.0.1 $HOSTNAME
           ${MasterIPv4Address} $HOSTNAME
+          ${MinionIPv4Address} ${EC2InstanceMinion.PrivateDnsName}
           EOF
 
-          echo "nameserver 8.8.8.8" > /etc/resolv.conf
-          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/config.yml
+          cat >> /etc/resolv.conf << EOF
+          search cluster.local
+          nameserver 8.8.8.8
+          nameserver ${MasterIPv4Address}
+          EOF
+          
+          chattr +i /etc/resolv.conf
           
           # Signal success
           
