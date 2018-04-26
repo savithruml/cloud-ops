@@ -67,6 +67,7 @@ Parameters:
     Description: Contrail build information
     Type: String
     AllowedValues:
+    - latest
     - newton-master-53
     - newton-master-44
     - newton-master-39
@@ -223,7 +224,7 @@ Resources:
     DependsOn: EC2InstanceMinion
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: PT20M
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
@@ -247,12 +248,15 @@ Resources:
           
           sudo -u root bash << EOF
           sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
+          sed -i -e 's/#StrictModes yes/StrictModes no/g' /etc/ssh/sshd_config
           service sshd restart
           echo root:${InstancePassword} | chpasswd
           yum install epel-release -y && yum update -y
-          yum install python git wget vim sshpass ansible httpd python-setuptools python-pip python-netaddr -y
+          yum install python git wget vim sshpass ansible python-setuptools python-pip python-netaddr -y
           setenforce 0 || true
           ssh-keygen -t rsa -C "" -P "" -f "/root/.ssh/id_rsa" -q
+          until ping -c2 ${MinionIPv4Address} &>/dev/null; do :; done
+          sleep 5
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MasterIPv4Address}
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MinionIPv4Address}
           easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
@@ -274,7 +278,9 @@ Resources:
           ${MinionIPv4Address} openshift_hostname=${EC2InstanceMinion.PrivateDnsName} openshift_node_labels="{'region': 'infra'}"
           EOF
 
-          sed -i -e 's/contrail_container_tag=newton-master-44/contrail_container_tag=${ContrailBuild}/g' /etc/ssh/sshd_config ContrailBuild
+          sed -i -e 's/contrail_container_tag=latest/contrail_container_tag=${ContrailBuild}/g' ~/openshift-ansible/playbooks/byo/config.yml
+          until ping -c2 ${MinionIPv4Address} &>/dev/null; do :; done
+          sleep 5
           ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/inventory/byo/ose-prerequisites.yml
           ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/openshift_facts.yml
 
@@ -283,14 +289,19 @@ Resources:
           ${MasterIPv4Address} $HOSTNAME
           ${MinionIPv4Address} ${EC2InstanceMinion.PrivateDnsName}
           EOF
-
+          
           cat >> /etc/resolv.conf << EOF
-          search cluster.local
+          search us-west-1.compute.internal cluster.local
           nameserver 8.8.8.8
           nameserver ${MasterIPv4Address}
           EOF
           
           chattr +i /etc/resolv.conf
+          
+          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/config.yml
+
+          oadm policy add-cluster-role-to-user cluster-admin admin
+          htpasswd -b -c /etc/origin/master/htpasswd admin contrail123
           
           # Signal success
           
@@ -338,6 +349,7 @@ Resources:
           # Install base packages
           
           sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
+          sed -i -e 's/#StrictModes yes/StrictModes no/g' /etc/ssh/sshd_config
           service sshd restart
           echo root:${InstancePassword} | chpasswd
           yum install epel-release -y && yum update -y
@@ -374,4 +386,4 @@ Outputs:
 
   Examples:
     Description: Examples to try
-    Value: "https://github.com/savithruml/openshift-contrail/tree/master/openshift/examples"
+    Value: "https://github.com/savithruml/cloud-ops/tree/master/aws/cloudformation/openshift/examples"
