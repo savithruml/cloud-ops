@@ -9,14 +9,6 @@
 - name: Register nodes to master
   shell: kubeadm join {{ groups['masters'][0] }}:6443 --token {{ hostvars[groups['masters'][0]]['token'] }} --discovery-token-unsafe-skip-ca-verification
 
-- name: Launch Contrail Networking
-  shell: kubectl apply -f /tmp/contrail-installer.yml
-  delegate_to: "{{ groups['masters'][0] }}"
-
-- name: Launch kubernetes dashboard
-  shell: kubectl create -f /tmp/k8s-dashboard.yml
-  delegate_to: "{{ groups['masters'][0] }}"
-
 - name: Get master public hostname
   uri:
     url: http://169.254.169.254/latest/meta-data/public-hostname
@@ -31,6 +23,18 @@
 
 - name: Label master with opencontrail.org/controller=true
   command: kubectl label node "{{ hostname_private_master.stdout }}" opencontrail.org/controller=true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Create Contrail registry secret
+  command: kubectl create secret docker-registry contrail-registry-secret --docker-server="{{ contrail_registry }}" --docker-username="{{ contrail_registry_username }}" --docker-password="{{ contrail_registry_password }}" --docker-email=contrail@helloworld.com -n kube-system
+  delegate_to: "{{ groups['masters'][0] }}"
+  
+- name: Launch Contrail Networking
+  shell: kubectl apply -f /tmp/contrail-installer.yml
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Launch kubernetes dashboard
+  shell: kubectl create -f /tmp/k8s-dashboard.yml
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Get node hostname
