@@ -21,9 +21,6 @@
     name: docker
     state: started
     enabled: yes
-    
-- name: Login to docker
-  command: docker login --username {{ container_registry_username }} --password {{ container_registry_password }} {{ container_registry }}
 
 - name: Stop ntp service
   service:
