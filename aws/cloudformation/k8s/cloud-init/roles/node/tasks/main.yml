@@ -26,7 +26,7 @@
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Create Contrail registry secret
-  command: kubectl create secret docker-registry contrail-registry-secret --docker-server="{{ contrail_registry }}" --docker-username="{{ contrail_registry_username }}" --docker-password="{{ contrail_registry_password }}" --docker-email=contrail@helloworld.com -n kube-system
+  command: kubectl create secret docker-registry contrail-registry-secret --docker-server="{{ contrail_registry }}" --docker-username="{{ contrail_registry_username }}" --docker-password="{{ contrail_registry_password }}" --docker-email=contrail@helloworld.com -n contrail
   delegate_to: "{{ groups['masters'][0] }}"
   
 - name: Launch Contrail Networking
