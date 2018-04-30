@@ -24,10 +24,6 @@
 - name: Label master with opencontrail.org/controller=true
   command: kubectl label node "{{ hostname_private_master.stdout }}" opencontrail.org/controller=true
   delegate_to: "{{ groups['masters'][0] }}"
-
-- name: Create Contrail registry secret
-  command: kubectl create secret docker-registry contrail-registry-secret --docker-server="{{ contrail_registry }}" --docker-username="{{ contrail_registry_username }}" --docker-password="{{ contrail_registry_password }}" --docker-email=contrail@helloworld.com -n contrail
-  delegate_to: "{{ groups['masters'][0] }}"
   
 - name: Launch Contrail Networking
   shell: kubectl apply -f /tmp/contrail-installer.yml
@@ -35,6 +31,10 @@
 
 - name: Launch kubernetes dashboard
   shell: kubectl create -f /tmp/k8s-dashboard.yml
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Create Contrail registry secret
+  command: kubectl create secret docker-registry contrail-registry-secret --docker-server="{{ contrail_registry }}" --docker-username="{{ contrail_registry_username }}" --docker-password="{{ contrail_registry_password }}" --docker-email=contrail@helloworld.com -n contrail
   delegate_to: "{{ groups['masters'][0] }}"
 
 - name: Get node hostname
