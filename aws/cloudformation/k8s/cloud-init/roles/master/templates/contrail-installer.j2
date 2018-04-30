@@ -268,7 +268,7 @@ spec:
       hostNetwork: true
       containers:
       - name: contrail-analyticsdb-nodemgr
-        image: "hub.juniper.net/contrail/contrail-nodemgr:5.0.0-0.40"
+        image: "{{ contrail_registry }}/contrail-nodemgr:{{ contrail_container_tag }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
