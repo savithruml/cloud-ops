@@ -267,6 +267,30 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       containers:
+      - name: contrail-database-nodemgr
+        image: "hub.juniper.net/contrail/contrail-nodemgr:5.0.0-0.40"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        env:
+        - name: NODE_TYPE
+          value: "database"
+        - name: CASSANDRA_CQL_PORT
+          value: "9042"
+        - name: CASSANDRA_JMX_LOCAL_PORT
+          value: "7200"
+        volumeMounts:
+        - mountPath: /etc/hosts
+          name: hosts
+        - mountPath: /var/log/contrail
+          name: logs
+        - mountPath: /var/run/docker.sock
+          name: docker
       - name: contrail-analyticsdb
         image: "{{ contrail_registry }}/contrail-external-cassandra:{{ contrail_container_tag }}"
         imagePullPolicy: ""
@@ -287,6 +311,16 @@ spec:
       - name: analyticsdb-log
         hostPath:
           path: /var/log/contrail/analyticsdb
+      - name: hosts
+        hostPath:
+          path: /etc/hosts
+      - name: logs
+        hostPath:
+          path: /var/log/contrail/analytics_database
+          type: DirectoryOrCreate
+      - name: docker
+        hostPath:
+          path: /var/run/docker.sock
       imagePullSecrets:
       - name: contrail-registry-secret
 ---
