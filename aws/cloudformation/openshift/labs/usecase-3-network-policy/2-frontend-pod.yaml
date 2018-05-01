@@ -5,7 +5,7 @@ metadata:
   labels:
     tier: web
   annotations: {
-    "opencontrail.org/network" : '{"domain":"default-domain", "project": "demo", "name":"frontend-network"}'
+    "opencontrail.org/network" : '{"domain":"default-domain", "project": "demo-policy", "name":"frontend-network"}'
   }
 spec:
   containers:
