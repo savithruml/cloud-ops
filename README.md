@@ -1,114 +1,128 @@
-# Red Hat OpenShift Origin with Contrail SDN
+# Google Kubernetes / RedHat OpenShift + OpenContrail SDN
 
-This tutorial walks you through the installation of Red Hat OpenShift container orchestration platform with Contrail SDN as the CNI on Amazon Web Services (AWS). 
+Quickly bringup a Kubernetes cluster with OpenContrail SDN on different clouds (AWS/Azure/GCP/OpenStack)
 
-It leverages AWS's CloudFormation to launch the stack & takes approximately 30 min for the total installation to complete. The stack builds
+## AWS CloudFormation
 
-* Red Hat OpenShift Origin v3.7
-* Contrail Networking CNI 5.0
+AWS [CloudFormation](https://aws.amazon.com/cloudformation/) provides a common language for you to describe and provision all the infrastructure resources in your cloud environment. CloudFormation allows you to use a simple text file to model and provision, in an automated and secure manner, all the resources needed for your applications across all regions and accounts. This file serves as the single source of truth for your cloud environment.
 
-# Prerequisites
+* Google Kubernetes with OpenContrail SDN
 
-* [Create](https://portal.aws.amazon.com/billing/signup#/start) an AWS account if you don't have one. Else [Login](https://aws.amazon.com/console/)
+     <a href="https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=contrail-k8s&amp;templateURL=https://s3-us-west-1.amazonaws.com/contrail-dev-ops/k8s-contrail-stack-5.yaml" target="_blank"><img alt="Launch Stack" src="https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg"></a>
 
-* [Subscribe](https://aws.amazon.com/marketplace/pp/B00O7WM7QW) to CentOS AMI on AWS marketplace
 
-* [Create](https://github.com/join) a GitHub account if you don't have one. Else [Login](https://github.com/login)
+* RedHat OpenShift with OpenContrail SDN
 
-# Installation
+     <a href="https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=contrail-k8s&amp;templateURL=https://s3-us-west-1.amazonaws.com/contrail-dev-ops/openshift-contrail-stack-5.yaml" target="_blank"><img alt="Launch Stack" src="https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg"></a>
 
-* Click on the button below to launch the stack in AWS
 
-     <a href="https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/create/review?filter=active&templateURL=https:%2F%2Fs3-us-west-1.amazonaws.com%2Fcontrail-dev-ops%2Fopenshift-contrail-stack-5.yaml&stackName=openshift-stack" target="_blank"><img alt="Launch Stack" src="https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg"></a>
+## HashiCorp Terraform
 
-* Once you click on the button, you will be navigated to AWS CloudFormation page. Enter the parameters
+HashiCorp [Terraform](https://www.terraform.io/) enables you to safely and predictably create, change, and improve infrastructure. It is an open source tool that codifies APIs into declarative configuration files that can be shared amongst team members, treated as code, edited, reviewed, and versioned.
 
-  ![launch-stack](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/1-initiate.jpg)
+* Kubernetes with OpenContrail SDN
 
-    **NOTE:** You can leave most of the parameters set to default
-
-       InstanceType:
-         Description: EC2 instance type
-         Default: t2.xlarge
-
-       VpcCIDR:
-         Description: CIDR block for the VPC
-         Default: 10.10.0.0/16
-
-       SubnetCIDR:
-         Description: CIDR block for the VPC subnet
-         Default: 10.10.10.0/24
-    
-       MasterIPv4Address:
-         Description: Master instance's IPv4 Address
-         Default: 10.10.10.10
-
-       MinionIPv4Address:
-         Description: Minion instance's IPv4 Address
-         Default: 10.10.10.11
-   
-       SSHLocation:
-         Description: Allow access to EC2 instances from
-         Default: 0.0.0.0/0
-
-       InstancePassword:
-         Description: Password for the instances
-
-       ContrailBuild:
-         Description: Contrail build information
-         Default: 5.0
-
-       ContrailRegistry:
-         Description: Registry to pull Contrail containers
-         Default: hub.juniper.net/contrail
-    
-       ContrailRegistryUsername:
-         Description: Registry username
-    
-       ContrailRegistryPassword:
-         Description: Registry password
-
-* Wait for the stack to complete. You can monitor the resource creation by clicking on the **Events** tab
+  [Download](https://www.terraform.io/downloads.html) Terraform
   
-  ![monitor-stack](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/2-monitor.jpg)
+          (host)# ssh-keygen -b 2048 -t rsa -f .ssh/terraform
+          (host)# git clone https://github.com/savithruml/cloud-ops
+          (host)# cd cloud-ops/aws/terraform/k8s
+          (host)# vi terraform.tfvars
+      
+               ...
+                    # AWS access key
+                    aws_access_key            = "<access-key>"
 
-* Once complete, navigate to the **Outputs** tab & copy the ShellURL value. Login to the instance using the ShellURL & the password you set
+                    # AWS secret key
+                    aws_secret_key            = "<secret-key>"
+               ...
+  
+          (host)# terraform apply
+      
+## Red Hat Ansible
 
-  ![complete-stack](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/3-complete.jpg)
+Red Hat® [Ansible](https://www.ansible.com/) makes it easy to scale automation, manage complex deployments and speed productivity. Extend the power of Ansible with workflows to streamline jobs and simple tools to share solutions with your team.
 
-* Run the script from the master instance's /root directory
+* Kubernetes with OpenContrail SDN
 
-       (local-instance)# ssh root@ec2-<public-ip>.us-west-1.compute.amazonaws.com
+    1) Bring your ansible node. This node can either sit indide the AWS environment or outside
+    
+            (ansible-node)# apt-get update -y && apt-get install python python-pip -y
+            (ansible-node)# pip install -U ansible boto boto3
+      
+            (ansible-node)# cd /root
+            (ansible-node)# git clone https://github.com/savithruml/ansible-labs
+            
+    2) Populate /root/ansible-labs/aws/playbooks/group_vars/all file with AWS creds & cluster info
+      
+            (ansible-node)# cat /root/ansible-labs/aws/playbooks/group_vars/all
+            
+                  aws_access_key: <key-here> 
+                  aws_secret_key: <secret-key-here>
+                  key_name: <key>
+                  aws_region: <region>
+                  vpc_id: <vpc>
+                  vpc_subnet_id: <subnet>
+                  ami_id: <image>
+                  instance_type: <flavor>
+                  count: 2
+                  ec2_tag: contrail-k8s
+                 
+            (ansible-node)# cd /root/ansible-labs/aws       
+            (ansible-node)# ansible-playbook -i inventory/hosts playbooks/deploy-vms.yml
+            
+        This should bring up 2 instances in AWS with root password set to "c0ntrail123"
+    
+    4) Prepare nodes for deployment
 
-       (master-instance)# cd /root
-       (master-instance)# ~/run.sh
+    5) Run these commands on all nodes. This will enable root access with password
+    
+            (all-nodes)# sudo su
+            (all-nodes)# sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
+            (all-nodes)# service sshd restart
+    
+    6) Logout & login as root user
+    
+            (ansible-node)# ssh-keygen –t rsa
+            (ansible-node)# ssh-copy-id root@<k8s-master>
+            (ansible-node)# ssh-copy-id root@<k8s-node>
+             
+    7) Populate /root/ansible-labs/k8s/hosts with k8s-master & k8s-node info
+    
+            (ansible-node)# cat /root/ansible-labs/k8s/hosts
+       
+               [masters]
+               10.10.10.1
 
-  ![run-stack](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/4-run-sh.jpg)
+               [nodes]
+               10.10.10.2
+        
+    8) Run the play
+ 
+            (ansible-node)# cd /root/ansible-labs/k8s
+            (ansible-node)# ansible-playbook -i hosts site.yml
+            
+## OpenStack Heat
 
-* Once install is complete, login to the dashboards (WebUI) of both OpenShift & Contrail. The URL's are listed in the **Outputs** tab of AWS CloudFormation
+OpenStack [Heat](https://wiki.openstack.org/wiki/Heat) is a service in OpenStack to orchestrate composite cloud applications using a declarative template format through an OpenStack-native REST API.
 
-  ![openshift-webui](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/6-openshift-webui.png)
+* Kubernetes with OpenContrail SDN
 
-  ![contrail-webui](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/7-contrail-webui.png)
+            (openstack-controller)# git clone https://github.com/savithruml/cloud-ops
+            (openstack-controller)# cd cloud-ops/openstack/nested-k8s/provisioning/heat
+            (openstack-controller)# vi /root/nested-mode-contrail-networking/provisioning/heat/deploy-nested.env
+                           
+                  ...
+                     parameters:
 
-* Verify all Contrail pods are running healthy, by logging into OpenShift & Contrail dashboards
+                     # FQDN of the public network
+                     public_network_fqdn: "default-domain:admin:public"
 
-    **_OpenShift Dashboard > My Projects > kube-system > Applications > Pods_**
+                     # Name of the master instance
+                     master_instance_name: "nested-master"
 
-  ![contrail-pods](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/8-contrail-pods.png)
-
-    **_Contrail Dashboard > Monitor > Infrastructure > Dashboard_**
-
-  ![contrail-status](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/9-contrail-status.png)
-
-* Enable SNAT on the pod network, by logging into Contrail dashboard
-
-    **_Contrail Dashboard > Configure > Networking > Networks > default-domain > default> k8s-default-pod-network (edit)_**
-
-  ![enable-snat](https://github.com/savithruml/cloud-ops/blob/master/aws/cloudformation/openshift/images/10-enable-snat.jpg)
-
-* Try the below labs
-
-    1. [LAB-1: Build/test/deploy highly scalable apps using OpenShift & Contrail SDN](https://s3-us-west-1.amazonaws.com/contrail-labs/usecase-1-openshift-build.pdf)
-    2. [LAB-2: Expose highly scalable apps using OpenShift & Contrail SDN](https://s3-us-west-1.amazonaws.com/contrail-labs/usecase-2-openshift-ingress.pdf)
-    3. [LAB-3: Secure highly scalable apps using OpenShift & Contrail SDN](https://s3-us-west-1.amazonaws.com/contrail-labs/usecase-3-openshift-network-policy.pdf)
+                     # IP address of the master instance
+                     master_ip: "<master-instance-IPv4-address>"
+                  ...
+            
+            (openstack-controller)# heat stack-create nested -f deploy-nested.yaml -e deploy-nested.env
