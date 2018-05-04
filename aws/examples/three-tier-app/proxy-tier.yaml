@@ -1,0 +1,42 @@
+---
+# Author: SAVITHRU LOKANATH
+# Contact: SAVITHRU AT ICLOUD DOT COM
+# Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
+
+apiVersion: v1
+
+kind: Pod
+metadata:
+  name: proxy-pod
+  labels:
+    tier: web
+    application: HRApp
+    site: USA
+    deployment: production
+spec:
+  containers:
+  - name: proxy-pod
+    image: savvythru/three-tier-proxy
+    env:
+    - name: REDMINE_SVC
+      value: redmine-svc
+    - name: REDMINE_SVC_PORT
+      value: "3000"
+    ports:
+    - containerPort: 9090
+
+kind: Service
+metadata:
+  name: proxy-svc
+  labels:
+    tier: web
+    application: HRApp
+    site: USA
+    deployment: production
+spec:
+  selector:
+    tier: web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9090
