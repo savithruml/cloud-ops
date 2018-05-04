@@ -1,8 +1,8 @@
----
 # Author: SAVITHRU LOKANATH
 # Contact: SAVITHRU AT ICLOUD DOT COM
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
 
+---
 apiVersion: v1
 
 kind: Pod
@@ -24,7 +24,7 @@ spec:
       value: "3000"
     ports:
     - containerPort: 9090
-
+---
 kind: Service
 metadata:
   name: proxy-svc
