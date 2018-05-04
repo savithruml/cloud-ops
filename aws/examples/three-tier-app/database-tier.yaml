@@ -1,8 +1,8 @@
----
 # Author: SAVITHRU LOKANATH
 # Contact: SAVITHRU AT ICLOUD DOT COM
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved
 
+---
 apiVersion: v1
 
 kind: Pod
@@ -22,7 +22,7 @@ spec:
       value: redmine
     - name: MYSQL_ROOT_PASSWORD
       value: secret
-
+---
 kind: Service
 metadata:
   name: database-svc
