@@ -42,6 +42,7 @@
     name: firewalld
     state: stopped
     enabled: no
+  ignore_errors: yes
 
 - name: Ensure kubernetes repo file exists
   file:
