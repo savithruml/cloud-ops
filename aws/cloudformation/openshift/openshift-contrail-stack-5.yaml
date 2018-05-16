@@ -64,14 +64,25 @@ Parameters:
     AllowedPattern: ^[a-zA-Z0-9]*$
 
   ContrailBuild:
-    Description: Contrail build information
+    Description: Contrail release
     Type: String
     AllowedValues:
-    - latest
-    - newton-master-53
-    - newton-master-44
-    - newton-master-39
-    Default: newton-master-53
+    - 5.0.0-0.40
+    Default: 5.0.0-0.40
+    
+  ContrailRegistry:
+    Description: Registry to pull Contrail containers
+    Type: String
+    Default: hub.juniper.net/contrail
+    
+  ContrailRegistryUsername:
+    Description: Registry username
+    Type: String
+    
+  ContrailRegistryPassword:
+    Description: Registry password
+    Type: String
+    NoEcho: true
 
 Mappings:
   AWSInstanceType2Arch:
@@ -263,7 +274,7 @@ Resources:
           
           # Install openshift
           
-          cd ~/ && git clone https://github.com/savithruml/openshift-ansible -b contrail-openshift
+          cd ~/ && git clone https://github.com/savithruml/openshift-ansible -b contrail-training
           wget -O ~/openshift-ansible/inventory/byo/ose-prerequisites.yml https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-prerequisites.yml
           wget -O ~/openshift-ansible/inventory/byo/ose-install https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/ose-install
           cat >> ~/openshift-ansible/inventory/byo/ose-install << EOF
@@ -298,10 +309,16 @@ Resources:
           
           chattr +i /etc/resolv.conf
           
-          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/config.yml
-
+          cat >> ~/run.sh << EOF
+          ansible-playbook -i ~/openshift-ansible/inventory/byo/ose-install ~/openshift-ansible/playbooks/byo/config.yml -e contrail_container_tag=${ContrailBuild} -e contrail_registry_username=${ContrailRegistryUsername} -e contrail_registry_password=${ContrailRegistryPassword} -e contrail_registry=${ContrailRegistry}
+          wget -O - https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/cloudformation/openshift/cloud-init/post-install.sh | bash
+          ssh root@${MinionIPv4Address} iptables -I INPUT 4 -j ACCEPT
           oadm policy add-cluster-role-to-user cluster-admin admin
-          htpasswd -b -c /etc/origin/master/htpasswd admin contrail123
+          htpasswd -bc /etc/origin/master/htpasswd admin contrail123
+          
+          EOF
+          
+          chmod +x ~/run.sh
           
           # Signal success
           
@@ -352,8 +369,11 @@ Resources:
           sed -i -e 's/#StrictModes yes/StrictModes no/g' /etc/ssh/sshd_config
           service sshd restart
           echo root:${InstancePassword} | chpasswd
-          yum install epel-release -y && yum update -y
+          yum update --exclude=kernel* -y
+          yum --enablerepo=extras install epel-release -y
           yum install python python-pip wget vim -y
+          wget https://rpmfind.net/linux/centos/7.4.1708/updates/x86_64/Packages/kernel-3.10.0-693.21.1.el7.x86_64.rpm
+          yum localinstall kernel-3.10.0-693.21.1.el7.x86_64.rpm -y
           setenforce 0 || true
 
           cat >> /etc/hosts << EOF
@@ -381,9 +401,13 @@ Outputs:
     Value: !Sub "ssh root@${EC2InstanceMaster.PublicDnsName}"
 
   UsernamePassword:
-    Description: Contrail Web-UI username
+    Description: OpenShift/Contrail Web-UI username & password
     Value: admin/contrail123
 
   Examples:
     Description: Examples to try
     Value: "https://github.com/savithruml/cloud-ops/tree/master/aws/cloudformation/openshift/examples"
+
+  Labs:
+    Description: Labs to try
+    Value: "https://github.com/savithruml/cloud-ops/tree/master/aws/cloudformation/openshift/labs"
