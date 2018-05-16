@@ -64,15 +64,25 @@ Parameters:
     AllowedPattern: ^[a-zA-Z0-9]*$
 
   ContrailBuild:
-    Description: Contrail build information
+    Description: Contrail release
     Type: String
     AllowedValues:
-    - newton-master-58
-    - newton-master-53
-    - newton-master-44
-    - newton-master-39
-    - latest
-    Default: newton-master-58
+    - 5.0.0-0.40
+    Default: 5.0.0-0.40
+    
+  ContrailRegistry:
+    Description: Registry to pull Contrail containers
+    Type: String
+    Default: hub.juniper.net/contrail
+    
+  ContrailRegistryUsername:
+    Description: Registry username
+    Type: String
+    
+  ContrailRegistryPassword:
+    Description: Registry password
+    Type: String
+    NoEcho: true
 
 Mappings:
   AWSInstanceType2Arch:
@@ -81,6 +91,8 @@ Mappings:
     t2.large:
       Arch: HVM64
     t2.xlarge:
+      Arch: HVM64
+    t2.2xlarge:
       Arch: HVM64
     m1.xlarge:
       Arch: PV64
@@ -225,20 +237,7 @@ Resources:
     DependsOn: EC2InstanceMinion
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
-    Metadata:
-      AWS::CloudFormation::Init:
-        config:
-          packages:
-            apt:
-              apache2: []
-              libapache2-mod-wsgi: []
-          services:
-            sysvinit:
-              apache2:
-                enabled: true
-                ensureRunning: true
-
+        Timeout: PT25M
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch,
@@ -263,13 +262,13 @@ Resources:
           service sshd restart
           echo root:${InstancePassword} | chpasswd
           yum update -y && yum --enablerepo=extras install epel-release -y
-          yum install python git wget vim sshpass ansible httpd python-setuptools python-pip -y
+          yum install python git wget vim sshpass ansible python-setuptools python-pip -y
           setenforce 0 || true
           ssh-keygen -t rsa -C "" -P "" -f "/root/.ssh/id_rsa" -q
           until ping -c2 ${MinionIPv4Address} &>/dev/null; do :; done
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MasterIPv4Address}
           sshpass -p ${InstancePassword} ssh-copy-id -o StrictHostKeyChecking=no -i /root/.ssh/id_rsa.pub root@${MinionIPv4Address}
-          cd /tmp && git clone https://github.com/savithruml/cloud-ops
+          cd /tmp && git clone https://github.com/savithruml/cloud-ops -b build
           echo > cloud-ops/aws/cloudformation/k8s/cloud-init/hosts
           cat << 'EOF' >> cloud-ops/aws/cloudformation/k8s/cloud-init/hosts
           [masters]
@@ -283,7 +282,7 @@ Resources:
           cd /tmp/cloud-ops/aws/cloudformation/k8s/cloud-init
           until ping -c2 ${MinionIPv4Address} &>/dev/null; do :; done
           sleep 5
-          ansible-playbook -i hosts site.yml -e contrail_container_tag=${ContrailBuild}
+          ansible-playbook -i hosts site.yml -e contrail_container_tag=${ContrailBuild} -e contrail_registry_username=${ContrailRegistryUsername} -e contrail_registry_password=${ContrailRegistryPassword} -e contrail_registry=${ContrailRegistry}
           /usr/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceMaster --region ${AWS::Region}
 
       Tags:
@@ -327,8 +326,11 @@ Resources:
           sed -i -e 's/#PermitRootLogin yes/PermitRootLogin yes/g' -e 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config 
           service sshd restart
           echo root:${InstancePassword} | chpasswd
-          yum update -y && yum --enablerepo=extras install epel-release -y
+          yum update --exclude=kernel* -y
+          yum --enablerepo=extras install epel-release -y
           yum install python python-pip wget vim -y
+          wget https://rpmfind.net/linux/centos/7.4.1708/updates/x86_64/Packages/kernel-3.10.0-693.21.1.el7.x86_64.rpm
+          yum localinstall kernel-3.10.0-693.21.1.el7.x86_64.rpm -y
           setenforce 0 || true
           reboot
 
