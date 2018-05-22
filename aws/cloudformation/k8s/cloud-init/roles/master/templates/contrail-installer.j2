@@ -1,9 +1,14 @@
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+ name: "contrail"
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: env
-  namespace: kube-system
+  namespace: contrail
 data:
   AAA_MODE: "{{ aaa_mode }}"
   ANALYTICS_API_VIP: "{{ groups['masters'][0] }}"
@@ -32,7 +37,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nodemgr-config
-  namespace: kube-system
+  namespace: contrail
 data:
   DOCKER_HOST: "unix://mnt/docker.sock"
 ---
@@ -40,7 +45,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contrail-analyticsdb-config
-  namespace: kube-system
+  namespace: contrail
 data:
   CASSANDRA_SEEDS: "{{ groups['masters'][0] }}"
   CASSANDRA_CLUSTER_NAME: Contrail
@@ -72,7 +77,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rabbitmq-config
-  namespace: kube-system
+  namespace: contrail
 data:
   RABBITMQ_NODES: "{{ groups['masters'][0] }}"
   RABBITMQ_NODE_PORT: "{{ rabbitmq_node_port }}"
@@ -82,7 +87,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contrail-config-zookeeper
-  namespace: kube-system
+  namespace: contrail
 data:
   ZOOKEEPER_PORT: "{{ zookeeper_port }}"
   ZOOKEEPER_PORTS: "{{ zookeeper_ports }}"
@@ -92,7 +97,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contrail-analytics-zookeeper
-  namespace: kube-system
+  namespace: contrail
 data:
   ZOOKEEPER_PORT: "{{ zookeeper_analytics_port }}"
   ZOOKEEPER_PORTS: "{{ zookeeper_analytics_ports }}"
@@ -102,7 +107,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kube-manager-config
-  namespace: kube-system
+  namespace: contrail
 data:
   KUBERNETES_API_SERVER: "{{ groups['masters'][0] }}"
   KUBERNETES_API_SECURE_PORT: "{{ kubernetes_api_secure_port }}"
@@ -114,13 +119,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: contrail-kube-manager
-  namespace: kube-system
+  namespace: contrail
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: contrail-kube-manager
-  namespace: kube-system
+  namespace: contrail
 rules:
   - apiGroups: ["*"]
     resources: ["*"]
@@ -137,13 +142,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: contrail-kube-manager
-  namespace: kube-system
+  namespace: contrail
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: contrail-kube-manager-token
-  namespace: kube-system
+  namespace: contrail
   annotations:
     kubernetes.io/service-account.name: contrail-kube-manager
 type: kubernetes.io/service-account-token
@@ -152,7 +157,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: config-zookeeper
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: config-zookeeper
 spec:
@@ -201,7 +206,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: kafka
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: kafka
 spec:
@@ -240,7 +245,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-analyticsdb
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-analyticsdb
 spec:
@@ -289,7 +294,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-configdb
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-configdb
 spec:
@@ -338,7 +343,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-analytics-zookeeper
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: zookeeper
 spec:
@@ -392,7 +397,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-analytics
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-analytics
 spec:
@@ -526,7 +531,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-controller-control
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-controller-control
 spec:
@@ -627,7 +632,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-controller-config
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-controller-config
 spec:
@@ -735,7 +740,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-controller-webui
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-controller-webui
 spec:
@@ -794,7 +799,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: redis
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: redis
 spec:
@@ -846,7 +851,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: rabbitmq
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: rabbitmq
 spec:
@@ -899,7 +904,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-kube-manager
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-kube-manager
 spec:
@@ -953,7 +958,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contrail-agent
-  namespace: kube-system
+  namespace: contrail
   labels:
     app: contrail-agent
 spec:
