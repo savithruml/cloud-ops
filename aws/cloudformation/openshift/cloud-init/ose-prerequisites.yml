@@ -15,6 +15,7 @@
     - psacct
     - ntp
     - NetworkManager
+    - docker
 
   - name: Install openshift-enterprise package
     yum: name="{{ item }}" state=present
@@ -25,11 +26,6 @@
     
   - name: Install docker-py
     command: pip install docker-py
-
-  - name: Install docker
-    yum:
-      name: docker-1.12.6
-      state: present
 
   - name: Enable & start docker service
     service:
