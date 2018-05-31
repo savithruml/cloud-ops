@@ -23,4 +23,4 @@ Proxy (NGINX):
 
 * OPTION1: Login to the Proxy VM & issue a `curl/wget (HTTP /GET)` request to localhost:9090
 
-* OPTION2: Attach a Floating-IP to proxy virtual-machine-interface & enter the <floating-IP-address>:9090 in the web-browser
+* OPTION2: Attach a Floating-IP to proxy virtual-machine-interface & enter the `<floating-IP-address>:9090` in the web-browser
