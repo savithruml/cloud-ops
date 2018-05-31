@@ -1,5 +1,7 @@
 # THREE TIER APP
 
+## OpenStack
+
 ### TIER-1
 
 Database (MYSQL)
@@ -17,10 +19,30 @@ Web (REDMINE)
 Proxy (NGINX)
 
     docker run -itd --name proxy --net=host -e REDMINE_SVC=<web-tier-ip-address> -e REDMINE_SVC_PORT=3000 savvythru/three-tier-proxy
-    
 
 ## TEST
 
 * **OPTION1:** Login to the Proxy VM & issue a `curl/wget (HTTP /GET)` request to `localhost:9090`
 
 * **OPTION2:** Attach a Floating-IP to proxy virtual-machine-interface & enter the `http://<floating-IP-address>:9090` in the web-browser
+
+
+## Kubernetes/OpenShift
+
+### TIER-1
+
+Database (MYSQL)
+
+    kubectl/oc create -f https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/examples/three-tier-app/database-tier.yaml
+
+### TIER-2
+
+Web (REDMINE)
+
+    kubectl/oc create -f https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/examples/three-tier-app/frontend-tier.yaml
+
+### TIER-3
+
+Proxy (NGINX)
+
+    kubectl/oc create -f https://raw.githubusercontent.com/savithruml/cloud-ops/master/aws/examples/three-tier-app/proxy-tier.yaml
