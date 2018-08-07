@@ -17,7 +17,7 @@
   set_fact: token={{ kubeadm_token.stdout }}
 
 - name: Initialize kubernetes master
-  shell: kubeadm init --token {{ token }}
+  shell: kubeadm init --token {{ token }} --ignore-preflight-errors=cri
   register: init
   failed_when: "'FAILED' in init.stderr"
 

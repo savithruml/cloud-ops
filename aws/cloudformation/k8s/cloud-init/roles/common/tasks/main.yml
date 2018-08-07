@@ -64,6 +64,13 @@
        repo_gpgcheck=1
        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 
+- name: Remove old kubernetes packages
+  yum: name={{item}} state=absent
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+
 - name: Upgrade all packages
   yum:
     name: '*'
@@ -72,6 +79,6 @@
 - name: Install kubernetes packages
   yum: name={{item}} state=present
   with_items:
-    - kubelet
-    - kubeadm
-    - kubectl
+    - kubelet-1.9.2
+    - kubeadm-1.9.2
+    - kubectl-1.9.2
